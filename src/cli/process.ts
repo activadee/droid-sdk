@@ -1,7 +1,10 @@
-import type { Subprocess } from 'bun';
+import type { ChildProcess } from 'node:child_process';
+import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { CliNotFoundError, ExecutionError, TimeoutError } from '../errors';
 import type { JsonResult, OutputFormat, RunOptions, StreamEvent, ThreadOptions } from '../types';
 import { parseJsonLines } from './stream-parser';
+import { nodeStreamToWebStream, streamToString, waitForExit } from './utils';
 
 export interface SpawnOptions {
 	prompt?: string;
@@ -23,7 +26,7 @@ export interface DroidProcessResult {
 
 export interface StreamingDroidProcess {
 	events: AsyncIterable<StreamEvent>;
-	process: Subprocess;
+	process: ChildProcess;
 	waitForExit: () => Promise<number>;
 	kill: () => void;
 }
@@ -97,8 +100,7 @@ export async function findDroidPath(preferredPath?: string): Promise<string> {
 
 	if (preferredPath) {
 		searchPaths.push(preferredPath);
-		const file = Bun.file(preferredPath);
-		if (await file.exists()) {
+		if (existsSync(preferredPath)) {
 			return preferredPath;
 		}
 	}
@@ -107,8 +109,7 @@ export async function findDroidPath(preferredPath?: string): Promise<string> {
 	for (const dir of pathDirs) {
 		const droidPath = `${dir}/droid`;
 		searchPaths.push(droidPath);
-		const file = Bun.file(droidPath);
-		if (await file.exists()) {
+		if (existsSync(droidPath)) {
 			return droidPath;
 		}
 	}
@@ -123,8 +124,7 @@ export async function findDroidPath(preferredPath?: string): Promise<string> {
 
 	for (const path of additionalPaths) {
 		searchPaths.push(path);
-		const file = Bun.file(path);
-		if (await file.exists()) {
+		if (existsSync(path)) {
 			return path;
 		}
 	}
@@ -136,10 +136,9 @@ export async function spawnDroid(options: SpawnOptions): Promise<DroidProcessRes
 	const droidPath = await findDroidPath(options.droidPath);
 	const args = buildArgs(options);
 
-	const proc = Bun.spawn([droidPath, ...args], {
+	const proc = spawn(droidPath, args, {
 		cwd: options.cwd ?? process.cwd(),
-		stdout: 'pipe',
-		stderr: 'pipe',
+		stdio: ['inherit', 'pipe', 'pipe'],
 	});
 
 	const timeout = options.timeout;
@@ -154,9 +153,9 @@ export async function spawnDroid(options: SpawnOptions): Promise<DroidProcessRes
 	}
 
 	const [stdout, stderr, exitCode] = await Promise.all([
-		new Response(proc.stdout).text(),
-		new Response(proc.stderr).text(),
-		proc.exited,
+		streamToString(proc.stdout),
+		streamToString(proc.stderr),
+		waitForExit(proc),
 	]);
 
 	if (timeoutId) {
@@ -174,18 +173,18 @@ export async function spawnDroidStreaming(options: SpawnOptions): Promise<Stream
 	const droidPath = await findDroidPath(options.droidPath);
 	const args = buildArgs({ ...options, outputFormat: 'stream-json' });
 
-	const proc = Bun.spawn([droidPath, ...args], {
+	const proc = spawn(droidPath, args, {
 		cwd: options.cwd ?? process.cwd(),
-		stdout: 'pipe',
-		stderr: 'pipe',
+		stdio: ['inherit', 'pipe', 'pipe'],
 	});
 
-	const events = parseJsonLines(proc.stdout as ReadableStream<Uint8Array>);
+	const webStream = proc.stdout ? nodeStreamToWebStream(proc.stdout) : new ReadableStream();
+	const events = parseJsonLines(webStream);
 
 	return {
 		events,
 		process: proc,
-		waitForExit: () => proc.exited,
+		waitForExit: () => waitForExit(proc),
 		kill: () => proc.kill(),
 	};
 }
@@ -219,13 +218,11 @@ export async function listDroidTools(droidPath?: string, model?: string): Promis
 	}
 
 	const path = await findDroidPath(droidPath);
-	const proc = Bun.spawn([path, ...args], {
-		stdout: 'pipe',
-		stderr: 'pipe',
+	const proc = spawn(path, args, {
+		stdio: ['inherit', 'pipe', 'pipe'],
 	});
 
-	const stdout = await new Response(proc.stdout).text();
-	const exitCode = await proc.exited;
+	const [stdout, exitCode] = await Promise.all([streamToString(proc.stdout), waitForExit(proc)]);
 
 	if (exitCode !== 0) {
 		return [];

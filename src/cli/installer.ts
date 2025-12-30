@@ -1,6 +1,9 @@
+import { spawn } from 'node:child_process';
+import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { DroidError } from '../errors';
 import { findDroidPath } from './process';
+import { streamToString, waitForExit } from './utils';
 
 export interface InstallOptions {
 	installDir?: string;
@@ -69,7 +72,7 @@ export async function ensureDroidCli(options: InstallOptions = {}): Promise<stri
 async function installUnix(installDir: string, options: InstallOptions): Promise<string> {
 	const { onProgress } = options;
 
-	await Bun.$`mkdir -p ${installDir}`.quiet();
+	mkdirSync(installDir, { recursive: true });
 
 	onProgress?.({ phase: 'downloading', percent: 25, message: 'Fetching installer...' });
 
@@ -87,24 +90,22 @@ async function installUnix(installDir: string, options: InstallOptions): Promise
 		DROID_INSTALL_DIR: installDir,
 	};
 
-	const proc = Bun.spawn(['sh', '-c', script], {
+	const proc = spawn('sh', ['-c', script], {
 		env,
-		stdout: 'pipe',
-		stderr: 'pipe',
+		stdio: ['inherit', 'pipe', 'pipe'],
 	});
 
-	const exitCode = await proc.exited;
+	const exitCode = await waitForExit(proc);
 
 	if (exitCode !== 0) {
-		const stderr = await new Response(proc.stderr).text();
+		const stderr = await streamToString(proc.stderr);
 		throw new DroidError(`Installation failed: ${stderr}`);
 	}
 
 	onProgress?.({ phase: 'verifying', percent: 90, message: 'Verifying installation...' });
 
 	const droidPath = join(installDir, 'droid');
-	const file = Bun.file(droidPath);
-	if (!(await file.exists())) {
+	if (!existsSync(droidPath)) {
 		const pathDroid = await findDroidPath();
 		onProgress?.({ phase: 'complete', percent: 100, message: 'Installation complete' });
 		return pathDroid;
@@ -124,15 +125,14 @@ async function installWindows(_installDir: string, options: InstallOptions): Pro
 
 	const psCommand = 'irm https://app.factory.ai/cli/windows | iex';
 
-	const proc = Bun.spawn(['powershell', '-Command', psCommand], {
-		stdout: 'pipe',
-		stderr: 'pipe',
+	const proc = spawn('powershell', ['-Command', psCommand], {
+		stdio: ['inherit', 'pipe', 'pipe'],
 	});
 
-	const exitCode = await proc.exited;
+	const exitCode = await waitForExit(proc);
 
 	if (exitCode !== 0) {
-		const stderr = await new Response(proc.stderr).text();
+		const stderr = await streamToString(proc.stderr);
 		throw new DroidError(`Windows installation failed: ${stderr}`);
 	}
 
