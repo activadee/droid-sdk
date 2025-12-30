@@ -1,7 +1,7 @@
 {
   "name": "@activade/droid-sdk",
   "version": "0.0.1",
-  "description": "TypeScript SDK for Factory Droid CLI - Bun only",
+  "description": "TypeScript SDK for Factory Droid CLI - Works with Node.js and Bun",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -23,7 +23,7 @@
   ],
   "scripts": {
     "build": "bun run build:types && bun run build:js",
-    "build:js": "bun build ./src/index.ts ./src/cli/index.ts --outdir ./dist --target bun --splitting",
+    "build:js": "bun build ./src/index.ts ./src/cli/index.ts --outdir ./dist --target node --splitting",
     "build:types": "tsc --emitDeclarationOnly",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
@@ -40,6 +40,7 @@
     "ai",
     "cli",
     "sdk",
+    "node",
     "bun",
     "typescript",
     "codex",
@@ -56,7 +57,7 @@
   },
   "homepage": "https://github.com/activadee/droid-sdk#readme",
   "engines": {
-    "bun": ">=1.0.0"
+    "node": ">=18.0.0"
   },
   "peerDependencies": {
     "zod": "^3.0.0"

@@ -1,4 +1,6 @@
-import type { Subprocess } from 'bun';
+import { type ChildProcess, spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { Readable } from 'node:stream';
 import { CliNotFoundError, ExecutionError, TimeoutError } from '../errors';
 import type { JsonResult, OutputFormat, RunOptions, StreamEvent, ThreadOptions } from '../types';
 import { parseJsonLines } from './stream-parser';
@@ -23,7 +25,7 @@ export interface DroidProcessResult {
 
 export interface StreamingDroidProcess {
 	events: AsyncIterable<StreamEvent>;
-	process: Subprocess;
+	process: ChildProcess;
 	waitForExit: () => Promise<number>;
 	kill: () => void;
 }
@@ -97,8 +99,7 @@ export async function findDroidPath(preferredPath?: string): Promise<string> {
 
 	if (preferredPath) {
 		searchPaths.push(preferredPath);
-		const file = Bun.file(preferredPath);
-		if (await file.exists()) {
+		if (existsSync(preferredPath)) {
 			return preferredPath;
 		}
 	}
@@ -107,8 +108,7 @@ export async function findDroidPath(preferredPath?: string): Promise<string> {
 	for (const dir of pathDirs) {
 		const droidPath = `${dir}/droid`;
 		searchPaths.push(droidPath);
-		const file = Bun.file(droidPath);
-		if (await file.exists()) {
+		if (existsSync(droidPath)) {
 			return droidPath;
 		}
 	}
@@ -123,8 +123,7 @@ export async function findDroidPath(preferredPath?: string): Promise<string> {
 
 	for (const path of additionalPaths) {
 		searchPaths.push(path);
-		const file = Bun.file(path);
-		if (await file.exists()) {
+		if (existsSync(path)) {
 			return path;
 		}
 	}
@@ -132,14 +131,33 @@ export async function findDroidPath(preferredPath?: string): Promise<string> {
 	throw new CliNotFoundError(searchPaths);
 }
 
+function streamToString(stream: Readable | null): Promise<string> {
+	if (!stream) return Promise.resolve('');
+	return new Promise((resolve, reject) => {
+		const chunks: Buffer[] = [];
+		stream.on('data', (chunk: Buffer) => chunks.push(chunk));
+		stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+		stream.on('error', reject);
+	});
+}
+
+function waitForExit(proc: ChildProcess): Promise<number> {
+	return new Promise((resolve) => {
+		if (proc.exitCode !== null) {
+			resolve(proc.exitCode);
+			return;
+		}
+		proc.on('close', (code) => resolve(code ?? 0));
+	});
+}
+
 export async function spawnDroid(options: SpawnOptions): Promise<DroidProcessResult> {
 	const droidPath = await findDroidPath(options.droidPath);
 	const args = buildArgs(options);
 
-	const proc = Bun.spawn([droidPath, ...args], {
+	const proc = spawn(droidPath, args, {
 		cwd: options.cwd ?? process.cwd(),
-		stdout: 'pipe',
-		stderr: 'pipe',
+		stdio: ['inherit', 'pipe', 'pipe'],
 	});
 
 	const timeout = options.timeout;
@@ -154,9 +172,9 @@ export async function spawnDroid(options: SpawnOptions): Promise<DroidProcessRes
 	}
 
 	const [stdout, stderr, exitCode] = await Promise.all([
-		new Response(proc.stdout).text(),
-		new Response(proc.stderr).text(),
-		proc.exited,
+		streamToString(proc.stdout),
+		streamToString(proc.stderr),
+		waitForExit(proc),
 	]);
 
 	if (timeoutId) {
@@ -170,22 +188,41 @@ export async function spawnDroid(options: SpawnOptions): Promise<DroidProcessRes
 	return { stdout, stderr, exitCode };
 }
 
+function nodeStreamToWebStream(nodeStream: Readable): ReadableStream<Uint8Array> {
+	return new ReadableStream({
+		start(controller) {
+			nodeStream.on('data', (chunk: Buffer) => {
+				controller.enqueue(new Uint8Array(chunk));
+			});
+			nodeStream.on('end', () => {
+				controller.close();
+			});
+			nodeStream.on('error', (err) => {
+				controller.error(err);
+			});
+		},
+		cancel() {
+			nodeStream.destroy();
+		},
+	});
+}
+
 export async function spawnDroidStreaming(options: SpawnOptions): Promise<StreamingDroidProcess> {
 	const droidPath = await findDroidPath(options.droidPath);
 	const args = buildArgs({ ...options, outputFormat: 'stream-json' });
 
-	const proc = Bun.spawn([droidPath, ...args], {
+	const proc = spawn(droidPath, args, {
 		cwd: options.cwd ?? process.cwd(),
-		stdout: 'pipe',
-		stderr: 'pipe',
+		stdio: ['inherit', 'pipe', 'pipe'],
 	});
 
-	const events = parseJsonLines(proc.stdout as ReadableStream<Uint8Array>);
+	const webStream = proc.stdout ? nodeStreamToWebStream(proc.stdout) : new ReadableStream();
+	const events = parseJsonLines(webStream);
 
 	return {
 		events,
 		process: proc,
-		waitForExit: () => proc.exited,
+		waitForExit: () => waitForExit(proc),
 		kill: () => proc.kill(),
 	};
 }
@@ -219,13 +256,14 @@ export async function listDroidTools(droidPath?: string, model?: string): Promis
 	}
 
 	const path = await findDroidPath(droidPath);
-	const proc = Bun.spawn([path, ...args], {
-		stdout: 'pipe',
-		stderr: 'pipe',
+	const proc = spawn(path, args, {
+		stdio: ['inherit', 'pipe', 'pipe'],
 	});
 
-	const stdout = await new Response(proc.stdout).text();
-	const exitCode = await proc.exited;
+	const [stdout, exitCode] = await Promise.all([
+		streamToString(proc.stdout),
+		waitForExit(proc),
+	]);
 
 	if (exitCode !== 0) {
 		return [];
