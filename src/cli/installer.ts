@@ -1,9 +1,9 @@
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { Readable } from 'node:stream';
 import { DroidError } from '../errors';
 import { findDroidPath } from './process';
+import { streamToString, waitForExit } from './utils';
 
 export interface InstallOptions {
 	installDir?: string;
@@ -19,16 +19,6 @@ export interface InstallProgress {
 }
 
 const INSTALL_SCRIPT_URL = 'https://app.factory.ai/cli';
-
-function streamToString(stream: Readable | null): Promise<string> {
-	if (!stream) return Promise.resolve('');
-	return new Promise((resolve, reject) => {
-		const chunks: Buffer[] = [];
-		stream.on('data', (chunk: Buffer) => chunks.push(chunk));
-		stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
-		stream.on('error', reject);
-	});
-}
 
 function getDefaultInstallDir(): string {
 	const home = process.env.HOME ?? process.env.USERPROFILE ?? '';
@@ -105,9 +95,7 @@ async function installUnix(installDir: string, options: InstallOptions): Promise
 		stdio: ['inherit', 'pipe', 'pipe'],
 	});
 
-	const exitCode = await new Promise<number>((resolve) => {
-		proc.on('close', (code) => resolve(code ?? 0));
-	});
+	const exitCode = await waitForExit(proc);
 
 	if (exitCode !== 0) {
 		const stderr = await streamToString(proc.stderr);
@@ -141,9 +129,7 @@ async function installWindows(_installDir: string, options: InstallOptions): Pro
 		stdio: ['inherit', 'pipe', 'pipe'],
 	});
 
-	const exitCode = await new Promise<number>((resolve) => {
-		proc.on('close', (code) => resolve(code ?? 0));
-	});
+	const exitCode = await waitForExit(proc);
 
 	if (exitCode !== 0) {
 		const stderr = await streamToString(proc.stderr);

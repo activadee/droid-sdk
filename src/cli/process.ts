@@ -1,9 +1,9 @@
 import { type ChildProcess, spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { Readable } from 'node:stream';
 import { CliNotFoundError, ExecutionError, TimeoutError } from '../errors';
 import type { JsonResult, OutputFormat, RunOptions, StreamEvent, ThreadOptions } from '../types';
 import { parseJsonLines } from './stream-parser';
+import { nodeStreamToWebStream, streamToString, waitForExit } from './utils';
 
 export interface SpawnOptions {
 	prompt?: string;
@@ -131,26 +131,6 @@ export async function findDroidPath(preferredPath?: string): Promise<string> {
 	throw new CliNotFoundError(searchPaths);
 }
 
-function streamToString(stream: Readable | null): Promise<string> {
-	if (!stream) return Promise.resolve('');
-	return new Promise((resolve, reject) => {
-		const chunks: Buffer[] = [];
-		stream.on('data', (chunk: Buffer) => chunks.push(chunk));
-		stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
-		stream.on('error', reject);
-	});
-}
-
-function waitForExit(proc: ChildProcess): Promise<number> {
-	return new Promise((resolve) => {
-		if (proc.exitCode !== null) {
-			resolve(proc.exitCode);
-			return;
-		}
-		proc.on('close', (code) => resolve(code ?? 0));
-	});
-}
-
 export async function spawnDroid(options: SpawnOptions): Promise<DroidProcessResult> {
 	const droidPath = await findDroidPath(options.droidPath);
 	const args = buildArgs(options);
@@ -186,25 +166,6 @@ export async function spawnDroid(options: SpawnOptions): Promise<DroidProcessRes
 	}
 
 	return { stdout, stderr, exitCode };
-}
-
-function nodeStreamToWebStream(nodeStream: Readable): ReadableStream<Uint8Array> {
-	return new ReadableStream({
-		start(controller) {
-			nodeStream.on('data', (chunk: Buffer) => {
-				controller.enqueue(new Uint8Array(chunk));
-			});
-			nodeStream.on('end', () => {
-				controller.close();
-			});
-			nodeStream.on('error', (err) => {
-				controller.error(err);
-			});
-		},
-		cancel() {
-			nodeStream.destroy();
-		},
-	});
 }
 
 export async function spawnDroidStreaming(options: SpawnOptions): Promise<StreamingDroidProcess> {
