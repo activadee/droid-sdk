@@ -70,6 +70,6 @@
     "@biomejs/biome": "^1.9.0",
     "@types/bun": "latest",
     "typescript": "^5.7.0",
-    "zod": "^3.24.0"
+    "zod": "^4.2.1"
   }
 }
