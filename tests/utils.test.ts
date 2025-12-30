@@ -57,7 +57,6 @@ describe('waitForExit', () => {
 
 	it('should only resolve once even if both conditions trigger', async () => {
 		// This tests the resolveOnce guard
-		let resolveCount = 0;
 		const proc = spawn('echo', ['hello']);
 
 		const exitCode = await waitForExit(proc);
