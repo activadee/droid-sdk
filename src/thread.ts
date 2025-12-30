@@ -1,7 +1,7 @@
-import { type SpawnOptions, execDroidJson, spawnDroidStreaming } from './cli/process';
+import { execDroidJson, type SpawnOptions, spawnDroidStreaming } from './cli/process';
 import { ExecutionError } from './errors';
 import type { StreamedTurn } from './events';
-import { type TurnResult, buildTurnResultFromEvents, buildTurnResultFromJson } from './turn';
+import { buildTurnResultFromEvents, buildTurnResultFromJson, type TurnResult } from './turn';
 import type { DroidConfig, RunOptions, StreamEvent, ThreadOptions } from './types';
 
 export class Thread {

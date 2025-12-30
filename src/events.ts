@@ -7,9 +7,9 @@ export interface StreamedTurn {
 }
 
 export type {
+	MessageEvent,
 	StreamEvent,
 	SystemInitEvent,
-	MessageEvent,
 	ToolCallEvent,
 	ToolResultEvent,
 	TurnCompletedEvent,
@@ -17,8 +17,8 @@ export type {
 } from './types';
 
 export {
-	isSystemInitEvent,
 	isMessageEvent,
+	isSystemInitEvent,
 	isToolCallEvent,
 	isToolResultEvent,
 	isTurnCompletedEvent,
