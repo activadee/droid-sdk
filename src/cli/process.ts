@@ -222,10 +222,7 @@ export async function listDroidTools(droidPath?: string, model?: string): Promis
 		stdio: ['inherit', 'pipe', 'pipe'],
 	});
 
-	const [stdout, exitCode] = await Promise.all([
-		streamToString(proc.stdout),
-		waitForExit(proc),
-	]);
+	const [stdout, exitCode] = await Promise.all([streamToString(proc.stdout), waitForExit(proc)]);
 
 	if (exitCode !== 0) {
 		return [];
