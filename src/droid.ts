@@ -1,6 +1,6 @@
 import { execDroidJson, listDroidTools } from './cli/process';
 import { Thread } from './thread';
-import { type TurnResult, buildTurnResultFromJson } from './turn';
+import { buildTurnResultFromJson, type TurnResult } from './turn';
 import type { DroidConfig, ExecOptions, ThreadOptions } from './types';
 import { DEFAULT_DROID_PATH, DEFAULT_TIMEOUT } from './types';
 

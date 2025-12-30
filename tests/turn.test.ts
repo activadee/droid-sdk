@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { TurnResult, buildTurnResultFromEvents, buildTurnResultFromJson } from '../src/turn';
+import { buildTurnResultFromEvents, buildTurnResultFromJson, TurnResult } from '../src/turn';
 import {
 	MOCK_SESSION_ID,
 	mockCompletionEvent,

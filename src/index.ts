@@ -1,52 +1,50 @@
 export { Droid } from './droid';
-export { Thread } from './thread';
-export { TurnResult, buildTurnResultFromEvents, buildTurnResultFromJson } from './turn';
-
 export {
-	DroidError,
 	CliNotFoundError,
+	DroidError,
 	ExecutionError,
 	ParseError,
-	TimeoutError,
 	StreamError,
+	TimeoutError,
 } from './errors';
-
-export { MODELS, MODEL_INFO, getModelInfo, isValidModel, type ModelInfo } from './models';
-
 export type { StreamedTurn } from './events';
 export {
-	type StreamEvent,
-	type SystemInitEvent,
-	type MessageEvent,
-	type ToolCallEvent,
-	type ToolResultEvent,
-	type TurnCompletedEvent,
-	type TurnFailedEvent,
-	isSystemInitEvent,
 	isMessageEvent,
+	isSystemInitEvent,
 	isToolCallEvent,
 	isToolResultEvent,
 	isTurnCompletedEvent,
 	isTurnFailedEvent,
+	type MessageEvent,
+	type StreamEvent,
+	type SystemInitEvent,
+	type ToolCallEvent,
+	type ToolResultEvent,
+	type TurnCompletedEvent,
+	type TurnFailedEvent,
 } from './events';
 
+export { getModelInfo, isValidModel, MODEL_INFO, MODELS, type ModelInfo } from './models';
+export { Thread } from './thread';
+export { buildTurnResultFromEvents, buildTurnResultFromJson, TurnResult } from './turn';
+
 export type {
-	DroidConfig,
+	AnyTurnItem,
 	AutonomyLevel,
-	ReasoningEffort,
-	OutputFormat,
-	ModelId,
-	ThreadOptions,
-	RunOptions,
+	DroidConfig,
 	ExecOptions,
+	JsonResult,
 	JsonSchema,
-	TurnItem,
 	MessageItem,
+	ModelId,
+	OutputFormat,
+	ReasoningEffort,
+	RunOptions,
+	ThreadOptions,
 	ToolCallItem,
 	ToolResultItem,
-	AnyTurnItem,
+	TurnItem,
 	TurnResultData,
-	JsonResult,
 } from './types';
 
-export { DEFAULT_TIMEOUT, DEFAULT_DROID_PATH } from './types';
+export { DEFAULT_DROID_PATH, DEFAULT_TIMEOUT } from './types';
