@@ -1,4 +1,5 @@
-import { type ChildProcess, spawn } from 'node:child_process';
+import type { ChildProcess } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { CliNotFoundError, ExecutionError, TimeoutError } from '../errors';
 import type { JsonResult, OutputFormat, RunOptions, StreamEvent, ThreadOptions } from '../types';
