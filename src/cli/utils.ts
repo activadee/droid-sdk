@@ -20,12 +20,20 @@ export function streamToString(stream: Readable | null): Promise<string> {
  */
 export function waitForExit(proc: ChildProcess): Promise<number> {
 	return new Promise((resolve) => {
+		let resolved = false;
+		const resolveOnce = (code: number) => {
+			if (!resolved) {
+				resolved = true;
+				resolve(code);
+			}
+		};
+
 		// Register listener first to avoid race condition
-		proc.on('close', (code) => resolve(code ?? 0));
+		proc.on('close', (code) => resolveOnce(code ?? 0));
 
 		// Check if already exited after registering listener
 		if (proc.exitCode !== null) {
-			resolve(proc.exitCode);
+			resolveOnce(proc.exitCode);
 		}
 	});
 }
