@@ -103,7 +103,7 @@ export async function findDroidPath(preferredPath?: string): Promise<string> {
 		}
 	}
 
-	const pathDirs = (process.env['PATH'] ?? '').split(':');
+	const pathDirs = (process.env.PATH ?? '').split(':');
 	for (const dir of pathDirs) {
 		const droidPath = `${dir}/droid`;
 		searchPaths.push(droidPath);
@@ -113,7 +113,7 @@ export async function findDroidPath(preferredPath?: string): Promise<string> {
 		}
 	}
 
-	const homeDir = process.env['HOME'] ?? process.env['USERPROFILE'] ?? '';
+	const homeDir = process.env.HOME ?? process.env.USERPROFILE ?? '';
 	const additionalPaths = [
 		`${homeDir}/.local/bin/droid`,
 		`${homeDir}/.droid-sdk/bin/droid`,

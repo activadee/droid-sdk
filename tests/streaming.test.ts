@@ -18,7 +18,7 @@ function createMockStream(lines: string[]): ReadableStream<Uint8Array> {
 			if (index < lines.length) {
 				const line = lines[index];
 				if (line !== undefined) {
-					controller.enqueue(encoder.encode(line + '\n'));
+					controller.enqueue(encoder.encode(`${line}\n`));
 				}
 				index++;
 			} else {

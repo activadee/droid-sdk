@@ -11,8 +11,7 @@ export class CliNotFoundError extends DroidError {
 
 	constructor(searchedPaths: string[]) {
 		super(
-			`Droid CLI not found. Searched: ${searchedPaths.join(', ')}. ` +
-				'Install with: curl -fsSL https://app.factory.ai/cli | sh',
+			`Droid CLI not found. Searched: ${searchedPaths.join(', ')}. Install with: curl -fsSL https://app.factory.ai/cli | sh`,
 		);
 		this.name = 'CliNotFoundError';
 		this.searchedPaths = searchedPaths;

@@ -18,7 +18,7 @@ export interface InstallProgress {
 const INSTALL_SCRIPT_URL = 'https://app.factory.ai/cli';
 
 function getDefaultInstallDir(): string {
-	const home = process.env['HOME'] ?? process.env['USERPROFILE'] ?? '';
+	const home = process.env.HOME ?? process.env.USERPROFILE ?? '';
 	return join(home, '.droid-sdk', 'bin');
 }
 
@@ -122,7 +122,7 @@ async function installWindows(_installDir: string, options: InstallOptions): Pro
 		message: 'Windows installation requires PowerShell...',
 	});
 
-	const psCommand = `irm https://app.factory.ai/cli/windows | iex`;
+	const psCommand = 'irm https://app.factory.ai/cli/windows | iex';
 
 	const proc = Bun.spawn(['powershell', '-Command', psCommand], {
 		stdout: 'pipe',
