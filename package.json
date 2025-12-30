@@ -1,0 +1,75 @@
+{
+  "name": "@activade/droid-sdk",
+  "version": "0.0.0",
+  "description": "TypeScript SDK for Factory Droid CLI - Bun only",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./cli": {
+      "types": "./dist/cli/index.d.ts",
+      "import": "./dist/cli/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "bun run build:types && bun run build:js",
+    "build:js": "bun build ./src/index.ts ./src/cli/index.ts --outdir ./dist --target bun --splitting",
+    "build:types": "tsc --emitDeclarationOnly",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "test:watch": "bun test --watch",
+    "lint": "bunx biome check .",
+    "lint:fix": "bunx biome check --write .",
+    "format": "bunx biome format --write .",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "bun run clean && bun run lint && bun run test && bun run build"
+  },
+  "keywords": [
+    "factory",
+    "droid",
+    "ai",
+    "cli",
+    "sdk",
+    "bun",
+    "typescript",
+    "codex",
+    "agent"
+  ],
+  "author": "Activadee AI",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/activadee/droid-sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/activadee/droid-sdk/issues"
+  },
+  "homepage": "https://github.com/activadee/droid-sdk#readme",
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "peerDependencies": {
+    "zod": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "zod": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "@types/bun": "latest",
+    "typescript": "^5.7.0",
+    "zod": "^3.24.0"
+  }
+}
