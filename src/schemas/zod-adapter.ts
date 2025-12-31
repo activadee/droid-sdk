@@ -1,5 +1,13 @@
 import type { JsonSchema } from '../types';
 
+/**
+ * Internal type representing a Zod-like schema structure.
+ *
+ * This type allows the SDK to work with Zod schemas without requiring
+ * Zod as a direct dependency.
+ *
+ * @internal
+ */
 type ZodTypeLike = {
 	_def?: {
 		typeName?: string;
@@ -13,6 +21,46 @@ type ZodTypeLike = {
 	shape?: Record<string, ZodTypeLike>;
 };
 
+/**
+ * Converts a Zod schema to a JSON Schema object.
+ *
+ * This enables the SDK to accept Zod schemas for structured output
+ * validation and convert them to JSON Schema format for the CLI.
+ *
+ * Supported Zod types:
+ * - Primitives: string, number, boolean, null, undefined
+ * - Literals and enums
+ * - Arrays and objects
+ * - Optional, nullable, and default
+ * - Union, intersection, record, tuple
+ *
+ * @param schema - A Zod schema or Zod-like object
+ * @returns Equivalent JSON Schema object
+ *
+ * @example
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const userSchema = z.object({
+ *   name: z.string().min(1),
+ *   email: z.string().email(),
+ *   age: z.number().optional()
+ * });
+ *
+ * const jsonSchema = zodToJsonSchema(userSchema);
+ * // {
+ * //   type: 'object',
+ * //   properties: {
+ * //     name: { type: 'string', minLength: 1 },
+ * //     email: { type: 'string', format: 'email' },
+ * //     age: { type: 'number' }
+ * //   },
+ * //   required: ['name', 'email']
+ * // }
+ * ```
+ *
+ * @category Schema
+ */
 export function zodToJsonSchema(schema: ZodTypeLike): JsonSchema {
 	const def = schema._def;
 	if (!def) {
@@ -94,6 +142,14 @@ export function zodToJsonSchema(schema: ZodTypeLike): JsonSchema {
 	}
 }
 
+/**
+ * Builds a JSON Schema for a Zod string type.
+ *
+ * @param def - The Zod definition object
+ * @returns JSON Schema for a string type
+ *
+ * @internal
+ */
 function buildStringSchema(def: ZodTypeLike['_def']): JsonSchema {
 	const schema: JsonSchema = { type: 'string' };
 
@@ -127,6 +183,14 @@ function buildStringSchema(def: ZodTypeLike['_def']): JsonSchema {
 	return schema;
 }
 
+/**
+ * Builds a JSON Schema for a Zod number type.
+ *
+ * @param def - The Zod definition object
+ * @returns JSON Schema for a number type
+ *
+ * @internal
+ */
 function buildNumberSchema(def: ZodTypeLike['_def']): JsonSchema {
 	const schema: JsonSchema = { type: 'number' };
 
@@ -150,6 +214,15 @@ function buildNumberSchema(def: ZodTypeLike['_def']): JsonSchema {
 	return schema;
 }
 
+/**
+ * Builds a JSON Schema for a Zod object type.
+ *
+ * @param schema - The Zod schema object
+ * @param def - The Zod definition object
+ * @returns JSON Schema for an object type
+ *
+ * @internal
+ */
 function buildObjectSchema(schema: ZodTypeLike, def: ZodTypeLike['_def']): JsonSchema {
 	const shape = def?.shape?.() ?? schema.shape ?? {};
 	const properties: Record<string, JsonSchema> = {};
@@ -174,6 +247,25 @@ function buildObjectSchema(schema: ZodTypeLike, def: ZodTypeLike['_def']): JsonS
 	};
 }
 
+/**
+ * Type guard to check if a value is a Zod schema.
+ *
+ * @param value - Value to check
+ * @returns True if the value appears to be a Zod schema
+ *
+ * @example
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const schema = z.object({ name: z.string() });
+ *
+ * if (isZodSchema(schema)) {
+ *   const jsonSchema = zodToJsonSchema(schema);
+ * }
+ * ```
+ *
+ * @category Schema
+ */
 export function isZodSchema(value: unknown): value is ZodTypeLike {
 	return (
 		typeof value === 'object' &&

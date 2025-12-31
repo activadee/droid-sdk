@@ -1,0 +1,74 @@
+---
+title: CliNotFoundError
+description: Thrown when the Droid CLI is not installed
+---
+
+# CliNotFoundError
+
+Thrown when the Droid CLI binary cannot be found on the system.
+
+## Import
+
+```typescript
+import { CliNotFoundError, ensureDroidCli } from '@activade/droid-sdk';
+```
+
+## Properties
+
+### searchedPaths
+
+```typescript
+readonly searchedPaths: string[]
+```
+
+List of paths that were searched for the CLI.
+
+## Usage
+
+```typescript
+try {
+  await droid.exec('Hello');
+} catch (error) {
+  if (error instanceof CliNotFoundError) {
+    console.log('CLI not found in:', error.searchedPaths);
+
+    // Auto-install the CLI
+    await ensureDroidCli();
+
+    // Retry the operation
+    await droid.exec('Hello');
+  }
+}
+```
+
+## Common Causes
+
+1. **CLI not installed** - Run the installation script
+2. **PATH not configured** - Add CLI location to PATH
+3. **Custom path not set** - Configure `droidPath` in Droid options
+
+## Solutions
+
+### Install the CLI
+
+```bash
+curl -fsSL https://app.factory.ai/cli | sh
+```
+
+### Use Auto-installer
+
+```typescript
+import { ensureDroidCli } from '@activade/droid-sdk/cli';
+
+await ensureDroidCli({
+  onProgress: (p) => console.log(`[${p.phase}] ${p.message}`)
+});
+```
+
+### Specify Custom Path
+
+```typescript
+const droid = new Droid({
+  droidPath: '/custom/path/to/droid'
+});
+```

@@ -1,0 +1,141 @@
+---
+title: CLI Installer
+description: Functions for installing and managing the Droid CLI
+---
+
+# CLI Installer
+
+Functions for detecting and installing the Droid CLI binary.
+
+## Import
+
+```typescript
+import {
+  isDroidCliInstalled,
+  getDroidCliPath,
+  ensureDroidCli
+} from '@activade/droid-sdk/cli';
+```
+
+## isDroidCliInstalled()
+
+Check if the CLI is installed:
+
+```typescript
+async function isDroidCliInstalled(): Promise<boolean>
+```
+
+### Example
+
+```typescript
+const installed = await isDroidCliInstalled();
+if (!installed) {
+  console.log('CLI not found, installing...');
+  await ensureDroidCli();
+}
+```
+
+## getDroidCliPath()
+
+Get the path to an installed CLI:
+
+```typescript
+async function getDroidCliPath(): Promise<string | null>
+```
+
+### Example
+
+```typescript
+const path = await getDroidCliPath();
+if (path) {
+  console.log('CLI found at:', path);
+} else {
+  console.log('CLI not installed');
+}
+```
+
+## ensureDroidCli()
+
+Install the CLI if not present:
+
+```typescript
+async function ensureDroidCli(options?: InstallOptions): Promise<string>
+```
+
+### Parameters
+
+```typescript
+interface InstallOptions {
+  /** Progress callback */
+  onProgress?: (progress: InstallProgress) => void;
+
+  /** Force reinstall even if already installed */
+  force?: boolean;
+}
+
+interface InstallProgress {
+  /** Current phase of installation */
+  phase: 'checking' | 'downloading' | 'installing' | 'complete';
+
+  /** Human-readable progress message */
+  message: string;
+
+  /** Progress percentage (0-100), if available */
+  percent?: number;
+}
+```
+
+### Example
+
+```typescript
+const cliPath = await ensureDroidCli({
+  onProgress: (progress) => {
+    console.log(`[${progress.phase}] ${progress.message}`);
+    if (progress.percent !== undefined) {
+      console.log(`Progress: ${progress.percent}%`);
+    }
+  }
+});
+
+console.log('CLI ready at:', cliPath);
+```
+
+### Force Reinstall
+
+```typescript
+await ensureDroidCli({ force: true });
+```
+
+## Full Example
+
+```typescript
+import { Droid } from '@activade/droid-sdk';
+import { ensureDroidCli, isDroidCliInstalled } from '@activade/droid-sdk/cli';
+
+async function setup() {
+  // Check and install if needed
+  if (!(await isDroidCliInstalled())) {
+    console.log('Installing Droid CLI...');
+    await ensureDroidCli({
+      onProgress: (p) => console.log(`  ${p.message}`)
+    });
+  }
+
+  // Now safe to create Droid instance
+  const droid = new Droid();
+  return droid;
+}
+```
+
+## CI/CD Usage
+
+```typescript
+// In CI, install quietly
+await ensureDroidCli({
+  onProgress: (p) => {
+    if (p.phase === 'complete') {
+      console.log('CLI installed successfully');
+    }
+  }
+});
+```

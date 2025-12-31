@@ -1,0 +1,90 @@
+---
+title: Models Overview
+description: Available AI models and configuration
+---
+
+# Models
+
+The SDK supports multiple AI models from different providers.
+
+## Available Models
+
+```typescript
+import { MODELS } from '@activade/droid-sdk';
+```
+
+### Anthropic Claude
+
+| Constant | Model ID | Description |
+|----------|----------|-------------|
+| `MODELS.CLAUDE_OPUS` | `claude-opus-4-5-20251101` | Most capable, best for complex tasks |
+| `MODELS.CLAUDE_SONNET` | `claude-sonnet-4-5-20250929` | Balanced performance and speed |
+| `MODELS.CLAUDE_HAIKU` | `claude-haiku-4-5-20251001` | Fastest, best for simple tasks |
+
+### OpenAI GPT
+
+| Constant | Model ID | Description |
+|----------|----------|-------------|
+| `MODELS.GPT_5_1` | `gpt-5.1` | GPT-5.1 base model |
+| `MODELS.GPT_5_1_CODEX` | `gpt-5.1-codex` | Optimized for code |
+| `MODELS.GPT_5_2` | `gpt-5.2` | Latest GPT-5 variant |
+
+### Google Gemini
+
+| Constant | Model ID | Description |
+|----------|----------|-------------|
+| `MODELS.GEMINI_3_PRO` | `gemini-3-pro-preview` | Gemini 3 Pro preview |
+| `MODELS.GEMINI_3_FLASH` | `gemini-3-flash-preview` | Fast Gemini variant |
+
+### Open Source
+
+| Constant | Model ID | Description |
+|----------|----------|-------------|
+| `MODELS.DROID_CORE` | `glm-4.6` | Open source GLM model |
+
+## Usage
+
+```typescript
+import { Droid, MODELS } from '@activade/droid-sdk';
+
+// Using a constant
+const droid = new Droid({ model: MODELS.CLAUDE_SONNET });
+
+// Using a string
+const droid = new Droid({ model: 'claude-sonnet-4-5-20250929' });
+
+// Override per-thread
+const thread = droid.startThread({ model: MODELS.CLAUDE_OPUS });
+
+// Override per-run
+const result = await thread.run('Task', { model: MODELS.CLAUDE_HAIKU });
+```
+
+## Model Selection
+
+Choose based on your needs:
+
+| Use Case | Recommended Model |
+|----------|------------------|
+| Complex analysis | `CLAUDE_OPUS` |
+| General development | `CLAUDE_SONNET` |
+| Quick tasks | `CLAUDE_HAIKU` |
+| Code generation | `GPT_5_1_CODEX` |
+| Fast iteration | `GEMINI_3_FLASH` |
+
+## ModelId Type
+
+```typescript
+type ModelId =
+  | 'claude-opus-4-5-20251101'
+  | 'claude-sonnet-4-5-20250929'
+  | 'claude-haiku-4-5-20251001'
+  | 'gpt-5.1'
+  | 'gpt-5.1-codex'
+  | 'gpt-5.2'
+  | 'gemini-3-pro-preview'
+  | 'gemini-3-flash-preview'
+  | 'glm-4.6';
+```
+
+The `model` configuration accepts either a `ModelId` or any string for custom/new models.

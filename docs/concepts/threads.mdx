@@ -1,0 +1,123 @@
+---
+title: Conversation Threads
+description: Managing multi-turn AI conversations
+---
+
+# Conversation Threads
+
+Threads maintain context across multiple prompts, enabling natural multi-turn conversations with the AI.
+
+## Creating Threads
+
+Threads are created from a Droid instance:
+
+```typescript
+import { Droid } from '@activade/droid-sdk';
+
+const droid = new Droid();
+const thread = droid.startThread();
+```
+
+## Thread Lifecycle
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Create    │────▶│   Execute   │────▶│   Resume    │
+│  (new)      │     │  (run/      │     │  (later)    │
+│             │     │   stream)   │     │             │
+└─────────────┘     └─────────────┘     └─────────────┘
+       │                   │                   │
+       │                   ▼                   │
+       │           ┌─────────────┐             │
+       │           │   Session   │◀────────────┘
+       └──────────▶│     ID      │
+                   └─────────────┘
+```
+
+## Multi-turn Conversations
+
+Each prompt in a thread builds on previous context:
+
+```typescript
+const thread = droid.startThread();
+
+// Turn 1: Create initial code
+await thread.run('Create a UserService class with CRUD methods');
+
+// Turn 2: AI remembers the UserService
+await thread.run('Add validation to the create method');
+
+// Turn 3: AI has full context
+await thread.run('Write unit tests for the validation');
+```
+
+## Session Persistence
+
+Threads can be resumed across process restarts:
+
+```typescript
+// First session
+const thread = droid.startThread();
+await thread.run('Start building a payment system');
+const sessionId = thread.id;
+// Save sessionId to database/file
+
+// Later session
+const resumedThread = droid.resumeThread(sessionId);
+await resumedThread.run('Continue with refund handling');
+```
+
+## Thread Options
+
+Override Droid configuration per-thread:
+
+```typescript
+const thread = droid.startThread({
+  autonomyLevel: 'high',     // Override autonomy
+  enabledTools: ['Read', 'Write', 'Bash'],  // Limit tools
+  cwd: '/specific/project'   // Different working directory
+});
+```
+
+## Execution Methods
+
+### Synchronous Execution
+
+Wait for the complete response:
+
+```typescript
+const result = await thread.run('Create a config file');
+console.log(result.finalResponse);
+```
+
+### Streaming Execution
+
+Process events in real-time:
+
+```typescript
+const { events, result } = await thread.runStreamed('Build a complex feature');
+
+for await (const event of events) {
+  if (event.type === 'tool_call') {
+    console.log(`Using: ${event.toolName}`);
+  }
+}
+
+const finalResult = await result;
+```
+
+## Thread vs Exec
+
+| Feature | Thread | Exec |
+|---------|--------|------|
+| Context | Maintained | None |
+| Session ID | Yes | Per-call |
+| Resume | Yes | No |
+| Use case | Multi-turn | One-shot |
+
+## Best Practices
+
+1. **Use threads for related tasks** - Keep context across related operations
+2. **Save session IDs** - Enable resumption for long-running projects
+3. **Use exec for isolated tasks** - When context isn't needed
+4. **Stream for long operations** - Better UX with progress updates

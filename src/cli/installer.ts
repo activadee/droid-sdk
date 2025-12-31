@@ -5,26 +5,88 @@ import { DroidError } from '../errors';
 import { findDroidPath } from './process';
 import { streamToString, waitForExit } from './utils';
 
+/**
+ * Options for installing the Droid CLI.
+ *
+ * @category CLI
+ */
 export interface InstallOptions {
+	/**
+	 * Directory to install the CLI binary.
+	 * @default ~/.droid-sdk/bin
+	 */
 	installDir?: string;
+
+	/**
+	 * Force reinstallation even if CLI is already present.
+	 * @default false
+	 */
 	force?: boolean;
+
+	/**
+	 * Specific version to install.
+	 * If not specified, installs the latest version.
+	 */
 	version?: string;
+
+	/**
+	 * Callback for installation progress updates.
+	 */
 	onProgress?: (progress: InstallProgress) => void;
 }
 
+/**
+ * Installation progress update.
+ *
+ * @category CLI
+ */
 export interface InstallProgress {
+	/**
+	 * Current phase of the installation process.
+	 */
 	phase: 'checking' | 'downloading' | 'installing' | 'verifying' | 'complete';
+
+	/**
+	 * Percentage complete (0-100), if available.
+	 */
 	percent?: number;
+
+	/**
+	 * Human-readable status message.
+	 */
 	message?: string;
 }
 
 const INSTALL_SCRIPT_URL = 'https://app.factory.ai/cli';
 
+/**
+ * Gets the default installation directory.
+ *
+ * @returns Path to the default install directory
+ *
+ * @internal
+ */
 function getDefaultInstallDir(): string {
 	const home = process.env.HOME ?? process.env.USERPROFILE ?? '';
 	return join(home, '.droid-sdk', 'bin');
 }
 
+/**
+ * Checks if the Droid CLI is installed and accessible.
+ *
+ * @returns True if the CLI is found, false otherwise
+ *
+ * @example
+ * ```typescript
+ * if (await isDroidCliInstalled()) {
+ *   console.log('Droid CLI is ready');
+ * } else {
+ *   console.log('Please install the Droid CLI');
+ * }
+ * ```
+ *
+ * @category CLI
+ */
 export async function isDroidCliInstalled(): Promise<boolean> {
 	try {
 		await findDroidPath();
@@ -34,6 +96,21 @@ export async function isDroidCliInstalled(): Promise<boolean> {
 	}
 }
 
+/**
+ * Gets the path to the Droid CLI if installed.
+ *
+ * @returns Path to the CLI binary, or null if not installed
+ *
+ * @example
+ * ```typescript
+ * const path = await getDroidCliPath();
+ * if (path) {
+ *   console.log('CLI located at:', path);
+ * }
+ * ```
+ *
+ * @category CLI
+ */
 export async function getDroidCliPath(): Promise<string | null> {
 	try {
 		return await findDroidPath();
@@ -42,6 +119,44 @@ export async function getDroidCliPath(): Promise<string | null> {
 	}
 }
 
+/**
+ * Ensures the Droid CLI is installed, installing it if necessary.
+ *
+ * This is the recommended way to guarantee CLI availability before
+ * using the SDK. It handles:
+ * - Checking for existing installations
+ * - Downloading and installing if needed
+ * - Platform-specific installation (Unix/Windows)
+ * - Progress reporting
+ *
+ * @param options - Installation options
+ * @returns Path to the installed CLI binary
+ *
+ * @throws {DroidError} If installation fails
+ *
+ * @example
+ * ```typescript
+ * import { ensureDroidCli } from '@activade/droid-sdk/cli';
+ *
+ * // Simple usage
+ * const cliPath = await ensureDroidCli();
+ *
+ * // With progress reporting
+ * const cliPath = await ensureDroidCli({
+ *   onProgress: (progress) => {
+ *     console.log(`[${progress.phase}] ${progress.message}`);
+ *     if (progress.percent) {
+ *       console.log(`Progress: ${progress.percent}%`);
+ *     }
+ *   }
+ * });
+ *
+ * // Force reinstall
+ * const cliPath = await ensureDroidCli({ force: true });
+ * ```
+ *
+ * @category CLI
+ */
 export async function ensureDroidCli(options: InstallOptions = {}): Promise<string> {
 	const { force = false, onProgress } = options;
 
@@ -69,6 +184,15 @@ export async function ensureDroidCli(options: InstallOptions = {}): Promise<stri
 	return await installUnix(installDir, options);
 }
 
+/**
+ * Installs the Droid CLI on Unix-like systems.
+ *
+ * @param installDir - Directory to install the binary
+ * @param options - Installation options
+ * @returns Path to the installed binary
+ *
+ * @internal
+ */
 async function installUnix(installDir: string, options: InstallOptions): Promise<string> {
 	const { onProgress } = options;
 
@@ -115,6 +239,15 @@ async function installUnix(installDir: string, options: InstallOptions): Promise
 	return droidPath;
 }
 
+/**
+ * Installs the Droid CLI on Windows.
+ *
+ * @param _installDir - Directory to install the binary (may be ignored by Windows installer)
+ * @param options - Installation options
+ * @returns Path to the installed binary
+ *
+ * @internal
+ */
 async function installWindows(_installDir: string, options: InstallOptions): Promise<string> {
 	const { onProgress } = options;
 
