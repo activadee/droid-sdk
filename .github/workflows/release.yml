@@ -77,4 +77,4 @@ jobs:
           gh release create "v${{ github.event.inputs.version }}" \
             --generate-notes \
             --title "v${{ github.event.inputs.version }}" \
-            ${{ github.event.inputs.prerelease && '--prerelease' || '' }}
+            ${{ github.event.inputs.prerelease == 'true' && '--prerelease' || '' }}
