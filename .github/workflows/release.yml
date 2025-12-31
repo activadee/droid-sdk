@@ -59,10 +59,18 @@ jobs:
           git push origin main
           git push origin "v${{ github.event.inputs.version }}"
 
+      # Use native npm for publishing until Bun supports provenance
+      # https://github.com/oven-sh/bun/issues/15601
+      - name: Setup Node.js for npm publish
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          registry-url: "https://registry.npmjs.org"
+
       - name: Publish to npm
-        run: bunx npm publish --provenance --access public
+        run: npm publish --provenance --access public
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
         env:
