@@ -32,7 +32,8 @@
     "lint:fix": "bunx biome check --write .",
     "format": "bunx biome format --write .",
     "clean": "rm -rf dist",
-    "prepublishOnly": "bun run clean && bun run lint && bun run test && bun run build"
+    "prepublishOnly": "bun run clean && bun run lint && bun run test && bun run build",
+    "docs:dev": "bunx mintlify dev --port 3333"
   },
   "keywords": [
     "factory",

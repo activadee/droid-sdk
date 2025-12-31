@@ -1,0 +1,245 @@
+---
+title: Error Handling
+description: Gracefully handling SDK errors
+---
+
+# Error Handling
+
+The Droid SDK provides specific error classes for different failure scenarios, enabling precise error handling in your applications.
+
+## Error Hierarchy
+
+```
+DroidError (base)
+├── CliNotFoundError
+├── ExecutionError
+├── ParseError
+├── TimeoutError
+└── StreamError
+```
+
+## Error Types
+
+### CliNotFoundError
+
+Thrown when the Droid CLI is not installed:
+
+```typescript
+import { CliNotFoundError, ensureDroidCli } from '@activade/droid-sdk';
+
+try {
+  const result = await droid.exec('Hello');
+} catch (error) {
+  if (error instanceof CliNotFoundError) {
+    console.log('CLI not found, installing...');
+    await ensureDroidCli();
+  }
+}
+```
+
+### ExecutionError
+
+Thrown when CLI execution fails:
+
+```typescript
+import { ExecutionError } from '@activade/droid-sdk';
+
+try {
+  const result = await droid.exec('Perform risky operation');
+} catch (error) {
+  if (error instanceof ExecutionError) {
+    console.error('Execution failed:', error.message);
+    console.error('Exit code:', error.exitCode);
+    console.error('Stderr:', error.stderr);
+  }
+}
+```
+
+### ParseError
+
+Thrown when JSON parsing fails:
+
+```typescript
+import { ParseError } from '@activade/droid-sdk';
+
+try {
+  const data = result.parse(MySchema);
+} catch (error) {
+  if (error instanceof ParseError) {
+    console.error('Not valid JSON:', error.message);
+    console.error('Raw text:', error.rawText);
+  }
+}
+```
+
+### TimeoutError
+
+Thrown when operations exceed the timeout:
+
+```typescript
+import { TimeoutError } from '@activade/droid-sdk';
+
+try {
+  const result = await droid.exec('Complex operation');
+} catch (error) {
+  if (error instanceof TimeoutError) {
+    console.error(`Operation timed out after ${error.timeoutMs}ms`);
+  }
+}
+```
+
+### StreamError
+
+Thrown when stream processing fails:
+
+```typescript
+import { StreamError } from '@activade/droid-sdk';
+
+try {
+  const { events } = await thread.runStreamed('Build feature');
+  for await (const event of events) {
+    // Process events
+  }
+} catch (error) {
+  if (error instanceof StreamError) {
+    console.error('Stream error:', error.message);
+  }
+}
+```
+
+## Comprehensive Error Handling
+
+```typescript
+import {
+  Droid,
+  DroidError,
+  CliNotFoundError,
+  ExecutionError,
+  TimeoutError,
+  ParseError,
+  StreamError,
+  ensureDroidCli
+} from '@activade/droid-sdk';
+
+async function safeExecute(prompt: string) {
+  const droid = new Droid({ timeout: 60000 });
+
+  try {
+    return await droid.exec(prompt);
+  } catch (error) {
+    if (error instanceof CliNotFoundError) {
+      console.log('Installing CLI...');
+      await ensureDroidCli();
+      // Retry
+      return await droid.exec(prompt);
+    }
+
+    if (error instanceof TimeoutError) {
+      console.error('Operation timed out. Try with higher timeout.');
+      throw error;
+    }
+
+    if (error instanceof ExecutionError) {
+      console.error('Execution failed:', error.message);
+      throw error;
+    }
+
+    if (error instanceof DroidError) {
+      // Catch-all for other SDK errors
+      console.error('SDK error:', error.message);
+      throw error;
+    }
+
+    // Unknown error
+    throw error;
+  }
+}
+```
+
+## Retry Patterns
+
+### Simple Retry
+
+```typescript
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3
+): Promise<T> {
+  let lastError: Error | undefined;
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+
+      // Don't retry certain errors
+      if (error instanceof CliNotFoundError) throw error;
+      if (error instanceof ParseError) throw error;
+
+      // Wait before retry
+      await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+    }
+  }
+
+  throw lastError;
+}
+
+// Usage
+const result = await withRetry(() => droid.exec('Generate code'));
+```
+
+### Exponential Backoff
+
+```typescript
+async function withExponentialBackoff<T>(
+  fn: () => Promise<T>,
+  options = { maxRetries: 3, baseDelay: 1000 }
+): Promise<T> {
+  for (let i = 0; i < options.maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (i === options.maxRetries - 1) throw error;
+
+      const delay = options.baseDelay * Math.pow(2, i);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+  throw new Error('Unreachable');
+}
+```
+
+## Streaming Error Handling
+
+```typescript
+async function safeStream(thread: Thread, prompt: string) {
+  try {
+    const { events, result } = await thread.runStreamed(prompt);
+
+    for await (const event of events) {
+      if (event.type === 'turn.failed') {
+        console.error('Turn failed:', event.error.message);
+        // Handle inline error
+        break;
+      }
+      // Process other events
+    }
+
+    return await result;
+  } catch (error) {
+    if (error instanceof StreamError) {
+      console.error('Stream interrupted:', error.message);
+    }
+    throw error;
+  }
+}
+```
+
+## Best Practices
+
+1. **Catch specific errors** - Handle each error type appropriately
+2. **Use the error hierarchy** - Catch `DroidError` as fallback
+3. **Implement retries** - For transient failures
+4. **Log error details** - Use error properties for debugging
+5. **Handle stream errors inline** - Check for `turn.failed` events
