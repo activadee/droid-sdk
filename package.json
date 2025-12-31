@@ -1,6 +1,6 @@
 {
   "name": "@activade/droid-sdk",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "TypeScript SDK for Factory Droid CLI",
   "type": "module",
   "main": "dist/index.js",
