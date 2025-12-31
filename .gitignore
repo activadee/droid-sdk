@@ -6,6 +6,3 @@ coverage/
 .env
 .env.local
 *.tgz
-
-# Auto-generated docs (regenerate with: bun run docs:generate)
-docs/api-generated/
