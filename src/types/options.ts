@@ -4,6 +4,44 @@ export type ReasoningEffort = 'off' | 'none' | 'low' | 'medium' | 'high';
 
 export type OutputFormat = 'text' | 'json' | 'stream-json' | 'stream-jsonrpc';
 
+/**
+ * Supported file attachment types.
+ * - 'image': Image files (png, jpg, gif, webp, etc.) for vision-capable models
+ * - 'text': Text files, code, markdown, etc.
+ * - 'data': JSON, CSV, or other data files
+ * - 'other': Any other file type
+ */
+export type FileAttachmentType = 'image' | 'text' | 'data' | 'other';
+
+/**
+ * A file attachment to include with the prompt.
+ * The file will be referenced using the @path syntax that the droid CLI understands.
+ *
+ * @example
+ * ```typescript
+ * // Attach an image for vision models
+ * const result = await thread.run('Describe this screenshot', {
+ *   attachments: [{ path: './screenshot.png', type: 'image' }]
+ * });
+ *
+ * // Attach multiple files
+ * const result = await thread.run('Review these files', {
+ *   attachments: [
+ *     { path: './src/main.ts', type: 'text' },
+ *     { path: './data.json', type: 'data' }
+ *   ]
+ * });
+ * ```
+ */
+export interface FileAttachment {
+	/** Path to the file (relative to cwd or absolute) */
+	path: string;
+	/** Type of the file for context */
+	type: FileAttachmentType;
+	/** Optional description to include with the file reference */
+	description?: string;
+}
+
 export const MODELS = {
 	CLAUDE_OPUS: 'claude-opus-4-5-20251101',
 	CLAUDE_SONNET: 'claude-sonnet-4-5-20250929',
@@ -48,6 +86,7 @@ export interface JsonSchema {
 export interface RunOptions extends Partial<ThreadOptions> {
 	outputSchema?: JsonSchema;
 	promptFile?: string;
+	attachments?: FileAttachment[];
 }
 
 export interface ExecOptions extends RunOptions {

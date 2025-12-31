@@ -2,7 +2,14 @@ import type { ChildProcess } from 'node:child_process';
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { CliNotFoundError, ExecutionError, TimeoutError } from '../errors';
-import type { JsonResult, OutputFormat, RunOptions, StreamEvent, ThreadOptions } from '../types';
+import type {
+	FileAttachment,
+	JsonResult,
+	OutputFormat,
+	RunOptions,
+	StreamEvent,
+	ThreadOptions,
+} from '../types';
 import { parseJsonLines } from './stream-parser';
 import { nodeStreamToWebStream, streamToString, waitForExit } from './utils';
 
@@ -16,6 +23,7 @@ export interface SpawnOptions {
 	outputFormat?: OutputFormat;
 	threadOptions?: ThreadOptions;
 	runOptions?: RunOptions;
+	attachments?: FileAttachment[];
 }
 
 export interface DroidProcessResult {
@@ -29,6 +37,35 @@ export interface StreamingDroidProcess {
 	process: ChildProcess;
 	waitForExit: () => Promise<number>;
 	kill: () => void;
+}
+
+export function buildPromptWithAttachments(
+	prompt: string | undefined,
+	attachments: FileAttachment[] | undefined,
+): string | undefined {
+	if (!prompt && !attachments?.length) {
+		return undefined;
+	}
+
+	if (!attachments?.length) {
+		return prompt;
+	}
+
+	const attachmentRefs = attachments.map((attachment) => {
+		const ref = `@${attachment.path}`;
+		if (attachment.description) {
+			return `${ref} (${attachment.description})`;
+		}
+		return ref;
+	});
+
+	const attachmentBlock = attachmentRefs.join('\n');
+
+	if (!prompt) {
+		return attachmentBlock;
+	}
+
+	return `${attachmentBlock}\n\n${prompt}`;
 }
 
 function buildArgs(options: SpawnOptions): string[] {
@@ -88,8 +125,9 @@ function buildArgs(options: SpawnOptions): string[] {
 		args.push('--cwd', opts.cwd);
 	}
 
-	if (options.prompt) {
-		args.push(options.prompt);
+	const finalPrompt = buildPromptWithAttachments(options.prompt, options.attachments);
+	if (finalPrompt) {
+		args.push(finalPrompt);
 	}
 
 	return args;

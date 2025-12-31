@@ -6,6 +6,7 @@ export {
 	isDroidCliInstalled,
 } from './installer';
 export {
+	buildPromptWithAttachments,
 	type DroidProcessResult,
 	execDroidJson,
 	findDroidPath,
