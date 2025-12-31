@@ -104,6 +104,7 @@ export class Thread {
 			timeout: this._config.timeout,
 			threadOptions: mergedOptions,
 			runOptions: options,
+			attachments: options.attachments,
 		};
 	}
 }

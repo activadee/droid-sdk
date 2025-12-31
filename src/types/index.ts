@@ -20,6 +20,8 @@ export {
 export type {
 	AutonomyLevel,
 	ExecOptions,
+	FileAttachment,
+	FileAttachmentType,
 	JsonSchema,
 	ModelId,
 	OutputFormat,
