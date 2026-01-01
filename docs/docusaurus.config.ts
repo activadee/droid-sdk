@@ -30,7 +30,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/activadee/droid-sdk/tree/main/docs-site/',
+          editUrl: 'https://github.com/activadee/droid-sdk/tree/main/docs/',
           routeBasePath: '/',
         },
         blog: false,
