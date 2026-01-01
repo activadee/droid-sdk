@@ -1,0 +1,65 @@
+---
+title: Introduction
+description: TypeScript SDK for Factory Droid CLI - AI-powered code generation and automation
+slug: /
+---
+
+# Droid SDK
+
+The Droid SDK provides a programmatic TypeScript/JavaScript interface to the Factory Droid CLI, enabling AI-powered code generation and task automation in your applications.
+
+## What is Droid?
+
+Droid is Factory's AI development agent that can:
+
+- Generate and modify code based on natural language prompts
+- Execute multi-turn conversations with context retention
+- Use tools like file operations, shell commands, and web requests
+- Support multiple AI models (Claude, GPT, Gemini, and more)
+
+## Why Use the SDK?
+
+The SDK wraps the Droid CLI to enable:
+
+| Feature | Description |
+|---------|-------------|
+| **Automation** | Integrate AI code generation into CI/CD pipelines and automation workflows |
+| **Multi-turn Conversations** | Maintain context across multiple prompts with persistent sessions |
+| **Real-time Streaming** | Observe tool calls and intermediate results as they happen |
+| **Structured Output** | Parse AI responses with Zod schemas for type-safe data |
+
+## Quick Example
+
+```typescript
+import { Droid, MODELS } from '@activade/droid-sdk';
+
+const droid = new Droid({
+  model: MODELS.CLAUDE_SONNET,
+  autonomyLevel: 'high'
+});
+
+// One-shot execution
+const result = await droid.exec('Create a hello world function');
+console.log(result.finalResponse);
+
+// Multi-turn conversation
+const thread = droid.startThread();
+await thread.run('Create a React component');
+await thread.run('Add unit tests for it');
+```
+
+## Features
+
+- **Thread-based conversations**: Maintain context across multiple prompts
+- **Session persistence**: Resume conversations across process restarts
+- **Real-time streaming**: Observe tool calls as they happen
+- **Structured output**: Validate responses with Zod schemas
+- **Automatic CLI installation**: Install the CLI programmatically if needed
+- **Multiple model support**: Claude, GPT, Gemini, and more
+
+## Next Steps
+
+- [**Quick Start**](./quickstart) - Get up and running in minutes
+- [**Installation**](./installation) - Detailed installation instructions
+- [**API Reference**](./api-reference/overview) - Complete API documentation
+- [**Examples**](./guides/multi-turn) - Learn through practical examples

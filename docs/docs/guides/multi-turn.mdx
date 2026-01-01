@@ -1,0 +1,173 @@
+---
+title: Multi-turn Conversations
+description: Building complex interactions across multiple prompts
+---
+
+# Multi-turn Conversations
+
+Multi-turn conversations allow you to build complex features incrementally, with the AI maintaining context from previous interactions.
+
+## Basic Multi-turn Flow
+
+```typescript
+import { Droid, MODELS } from '@activade/droid-sdk';
+
+const droid = new Droid({ model: MODELS.CLAUDE_SONNET });
+const thread = droid.startThread();
+
+// Turn 1: Set up the project
+await thread.run('Create a new Express.js REST API project structure');
+
+// Turn 2: Add specific functionality (AI remembers the project)
+await thread.run('Add a /users endpoint with CRUD operations');
+
+// Turn 3: Continue building (AI has full context)
+await thread.run('Add JWT authentication middleware');
+
+// Turn 4: Finish up
+await thread.run('Add unit tests for the authentication');
+```
+
+## Saving and Resuming Sessions
+
+Sessions persist beyond process restarts:
+
+```typescript
+// Initial session
+async function startProject() {
+  const droid = new Droid();
+  const thread = droid.startThread();
+
+  await thread.run('Initialize a React TypeScript project');
+  await thread.run('Create a basic component structure');
+
+  // Save the session ID
+  return thread.id;
+}
+
+// Resume later
+async function continueProject(sessionId: string) {
+  const droid = new Droid();
+  const thread = droid.resumeThread(sessionId);
+
+  // AI remembers the React project
+  await thread.run('Add routing with React Router');
+  await thread.run('Create a navigation component');
+}
+```
+
+## Building Features Incrementally
+
+### Step-by-step Feature Development
+
+```typescript
+const thread = droid.startThread();
+
+// Step 1: Design
+const design = await thread.run(
+  'Design a user authentication system. List the components needed.'
+);
+console.log('Design:', design.finalResponse);
+
+// Step 2: Data models
+await thread.run('Create the User and Session data models');
+
+// Step 3: Core logic
+await thread.run('Implement the authentication service');
+
+// Step 4: API layer
+await thread.run('Create login and logout API endpoints');
+
+// Step 5: Middleware
+await thread.run('Add authentication middleware');
+
+// Step 6: Tests
+await thread.run('Write tests for the authentication flow');
+```
+
+### Iterative Refinement
+
+```typescript
+const thread = droid.startThread();
+
+// Initial implementation
+await thread.run('Create a function to validate email addresses');
+
+// Refine based on requirements
+await thread.run('Add support for custom TLDs');
+
+// Handle edge cases
+await thread.run('Handle emails with + signs and dots');
+
+// Optimize
+await thread.run('Optimize for performance with large lists');
+```
+
+## Managing Long Sessions
+
+### Checking Session State
+
+```typescript
+const thread = droid.startThread();
+await thread.run('Start working on feature X');
+
+// Thread ID is available after first run
+console.log('Session:', thread.id);
+
+// Check what's been done
+const status = await thread.run('Summarize what we have done so far');
+console.log(status.finalResponse);
+```
+
+### Session Storage Patterns
+
+```typescript
+// Store in a database
+interface ProjectSession {
+  projectId: string;
+  sessionId: string;
+  createdAt: Date;
+  lastActivity: Date;
+}
+
+async function saveSession(projectId: string, sessionId: string) {
+  await db.sessions.upsert({
+    projectId,
+    sessionId,
+    lastActivity: new Date()
+  });
+}
+
+async function getSession(projectId: string): Promise<string | null> {
+  const session = await db.sessions.findOne({ projectId });
+  return session?.sessionId ?? null;
+}
+```
+
+## Parallel Thread Execution
+
+Run multiple threads concurrently:
+
+```typescript
+const droid = new Droid();
+
+// Create multiple threads
+const featureThread = droid.startThread();
+const testThread = droid.startThread();
+const docsThread = droid.startThread();
+
+// Run in parallel
+const [feature, tests, docs] = await Promise.all([
+  featureThread.run('Implement user profile feature'),
+  testThread.run('Write test suite for API endpoints'),
+  docsThread.run('Generate API documentation')
+]);
+```
+
+## Best Practices
+
+1. **Be specific** - Clear prompts lead to better context retention
+2. **Reference previous work** - "Now add tests for the function we just created"
+3. **Save session IDs** - For long-running projects
+4. **Use summaries** - Ask for summaries to verify context
+5. **Start fresh when needed** - New threads for unrelated work

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "TypeScript SDK for Factory Droid CLI",
   "type": "module",
+  "workspaces": ["docs"],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -33,7 +34,9 @@
     "format": "bunx biome format --write .",
     "clean": "rm -rf dist",
     "prepublishOnly": "bun run clean && bun run lint && bun run test && bun run build",
-    "docs:dev": "bunx mintlify dev --port 3333"
+    "docs:dev": "cd docs && bun run start",
+    "docs:build": "cd docs && bun run build",
+    "docs:deploy": "cd docs && bun run deploy"
   },
   "keywords": [
     "factory",

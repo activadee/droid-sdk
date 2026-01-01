@@ -1,0 +1,191 @@
+---
+title: Droid
+description: Main entry point for the Droid SDK
+---
+
+# Droid
+
+The `Droid` class is the main entry point for the SDK. It provides methods for executing prompts and managing conversation threads.
+
+## Import
+
+```typescript
+import { Droid, MODELS } from '@activade/droid-sdk';
+```
+
+## Constructor
+
+```typescript
+new Droid(config?: DroidConfig)
+```
+
+Creates a new Droid instance with the specified configuration.
+
+### Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `config` | `DroidConfig` | No | `{}` | Configuration options |
+
+#### DroidConfig Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `cwd` | `string` | `process.cwd()` | Working directory for CLI operations |
+| `model` | `ModelId \| string` | - | AI model to use for generation |
+| `autonomyLevel` | `AutonomyLevel` | `'default'` | Level: `'default'`, `'low'`, `'medium'`, `'high'` |
+| `reasoningEffort` | `ReasoningEffort` | - | Intensity: `'off'`, `'none'`, `'low'`, `'medium'`, `'high'` |
+| `droidPath` | `string` | `'droid'` | Path to the Droid CLI binary |
+| `timeout` | `number` | `600000` | Maximum execution time in milliseconds |
+
+### Example
+
+```typescript
+const droid = new Droid({
+  model: MODELS.CLAUDE_SONNET,
+  autonomyLevel: 'high',
+  reasoningEffort: 'medium',
+  cwd: '/path/to/project',
+  timeout: 300000
+});
+```
+
+## Properties
+
+### config
+
+```typescript
+get config(): Readonly<DroidConfig>
+```
+
+Returns the current configuration as a readonly object.
+
+```typescript
+const droid = new Droid({ model: MODELS.CLAUDE_SONNET });
+console.log(droid.config.model); // 'claude-sonnet-4-5-20250929'
+```
+
+## Methods
+
+### startThread()
+
+```typescript
+startThread(options?: ThreadOptions): Thread
+```
+
+Creates a new conversation thread for multi-turn interactions.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `options` | `ThreadOptions` | No | Thread-specific configuration |
+
+**Returns:** A new `Thread` instance.
+
+```typescript
+const thread = droid.startThread({
+  autonomyLevel: 'high',
+  enabledTools: ['file_read', 'file_write']
+});
+
+await thread.run('Create a REST API');
+await thread.run('Add authentication');
+
+console.log('Session ID:', thread.id);
+```
+
+### resumeThread()
+
+```typescript
+resumeThread(sessionId: string, options?: ThreadOptions): Thread
+```
+
+Resumes a previously created conversation thread.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `sessionId` | `string` | Yes | Session ID from a previous thread |
+| `options` | `ThreadOptions` | No | Thread-specific configuration |
+
+**Returns:** A `Thread` instance connected to the existing session.
+
+```typescript
+const thread = droid.resumeThread('session_abc123...');
+await thread.run('What did we work on last time?');
+```
+
+### exec()
+
+```typescript
+exec(prompt: string, options?: ExecOptions): Promise<TurnResult>
+```
+
+Executes a single prompt without maintaining conversation state.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `prompt` | `string` | Yes | The natural language prompt |
+| `options` | `ExecOptions` | No | Execution options |
+
+**Returns:** A promise resolving to the execution result.
+
+**Throws:**
+- `ExecutionError` - If the CLI execution fails
+- `TimeoutError` - If the operation exceeds the configured timeout
+- `CliNotFoundError` - If the Droid CLI is not installed
+
+```typescript
+const result = await droid.exec('Generate a UUID');
+console.log(result.finalResponse);
+```
+
+### listTools()
+
+```typescript
+listTools(model?: string): Promise<string[]>
+```
+
+Lists all available tools for the configured or specified model.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `model` | `string` | No | Model ID (defaults to instance model) |
+
+**Returns:** A promise resolving to an array of tool names.
+
+```typescript
+const tools = await droid.listTools();
+console.log('Available tools:', tools);
+// ['file_read', 'file_write', 'shell_exec', ...]
+```
+
+## Full Example
+
+```typescript
+import { Droid, MODELS } from '@activade/droid-sdk';
+import { z } from 'zod';
+
+const droid = new Droid({
+  model: MODELS.CLAUDE_SONNET,
+  autonomyLevel: 'high',
+  cwd: './my-project'
+});
+
+// One-shot execution
+const result = await droid.exec('Create a hello world function');
+console.log(result.finalResponse);
+
+// Multi-turn conversation
+const thread = droid.startThread();
+await thread.run('Create a React component');
+await thread.run('Add unit tests for it');
+
+// Structured output
+const schema = z.object({
+  name: z.string(),
+  version: z.string()
+});
+
+const pkgResult = await droid.exec('Get package info as JSON');
+const pkg = pkgResult.parse(schema);
+console.log(pkg.name, pkg.version);
+```

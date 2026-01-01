@@ -1,0 +1,147 @@
+---
+title: Quick Start
+description: Get started with the Droid SDK in under 5 minutes
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Quick Start
+
+This guide will get you up and running with the Droid SDK in just a few minutes.
+
+## Prerequisites
+
+- Node.js 18+ or Bun 1.0+
+- Factory Droid CLI installed (or let the SDK install it for you)
+
+## Installation
+
+<Tabs>
+  <TabItem value="npm" label="npm" default>
+    ```bash
+    npm install @activade/droid-sdk
+    ```
+  </TabItem>
+  <TabItem value="bun" label="bun">
+    ```bash
+    bun add @activade/droid-sdk
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+    ```bash
+    yarn add @activade/droid-sdk
+    ```
+  </TabItem>
+  <TabItem value="pnpm" label="pnpm">
+    ```bash
+    pnpm add @activade/droid-sdk
+    ```
+  </TabItem>
+</Tabs>
+
+## Basic Usage
+
+### 1. Create a Droid Instance
+
+```typescript
+import { Droid, MODELS } from '@activade/droid-sdk';
+
+const droid = new Droid({
+  model: MODELS.CLAUDE_SONNET,
+  cwd: process.cwd()
+});
+```
+
+### 2. Execute a Prompt
+
+```typescript
+// One-shot execution
+const result = await droid.exec('Create a TypeScript function that validates email addresses');
+
+console.log(result.finalResponse);
+console.log(`Completed in ${result.durationMs}ms`);
+```
+
+### 3. Multi-turn Conversation
+
+```typescript
+// Start a conversation thread
+const thread = droid.startThread();
+
+// First prompt - establish context
+await thread.run('Create a REST API for a todo list');
+
+// Follow-up - the AI remembers the previous context
+await thread.run('Add authentication using JWT');
+
+// Another follow-up
+await thread.run('Write tests for the authentication');
+
+// Save session for later
+console.log('Session ID:', thread.id);
+```
+
+### 4. Resume a Conversation
+
+```typescript
+// Resume a previous conversation
+const thread = droid.resumeThread('session_abc123...');
+
+await thread.run('What did we work on last time?');
+```
+
+## Streaming Example
+
+For real-time progress updates:
+
+```typescript
+const thread = droid.startThread();
+const { events, result } = await thread.runStreamed('Build a React component');
+
+// Process events as they arrive
+for await (const event of events) {
+  switch (event.type) {
+    case 'tool_call':
+      console.log(`Calling: ${event.toolName}`);
+      break;
+    case 'tool_result':
+      console.log(`Result: ${event.isError ? 'ERROR' : 'OK'}`);
+      break;
+    case 'message':
+      console.log(`[${event.role}] ${event.text.slice(0, 100)}...`);
+      break;
+  }
+}
+
+// Get final result
+const finalResult = await result;
+console.log('Done:', finalResult.finalResponse);
+```
+
+## Structured Output
+
+Parse AI responses with Zod schemas:
+
+```typescript
+import { z } from 'zod';
+
+const TaskSchema = z.object({
+  title: z.string(),
+  priority: z.enum(['low', 'medium', 'high']),
+  completed: z.boolean()
+});
+
+const result = await thread.run('Create a task object as JSON');
+const task = result.parse(TaskSchema);
+
+console.log(task.title);    // TypeScript knows this is a string
+console.log(task.priority); // TypeScript knows this is 'low' | 'medium' | 'high'
+```
+
+## Next Steps
+
+- [**Core Concepts**](./concepts/droid) - Learn about Droid, Threads, and TurnResults
+- [**Streaming Guide**](./concepts/streaming) - Master real-time event handling
+- [**Error Handling**](./guides/error-handling) - Handle errors gracefully
+- [**API Reference**](./api-reference/overview) - Complete API documentation

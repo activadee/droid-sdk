@@ -1,0 +1,168 @@
+---
+title: Installation
+description: Install the Droid SDK and CLI in your project
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Installation
+
+## SDK Installation
+
+Install the Droid SDK using your preferred package manager:
+
+<Tabs>
+  <TabItem value="npm" label="npm" default>
+    ```bash
+    npm install @activade/droid-sdk
+    ```
+  </TabItem>
+  <TabItem value="bun" label="bun">
+    ```bash
+    bun add @activade/droid-sdk
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+    ```bash
+    yarn add @activade/droid-sdk
+    ```
+  </TabItem>
+  <TabItem value="pnpm" label="pnpm">
+    ```bash
+    pnpm add @activade/droid-sdk
+    ```
+  </TabItem>
+</Tabs>
+
+## CLI Installation
+
+The Droid SDK requires the Factory Droid CLI to be installed. You have two options:
+
+### Option 1: Manual Installation
+
+Install the CLI globally:
+
+```bash
+curl -fsSL https://app.factory.ai/cli | sh
+```
+
+### Option 2: Automatic Installation
+
+Use the SDK's built-in installer:
+
+```typescript
+import { ensureDroidCli } from '@activade/droid-sdk/cli';
+
+// Install CLI if not already present
+const cliPath = await ensureDroidCli({
+  onProgress: (progress) => {
+    console.log(`[${progress.phase}] ${progress.message}`);
+  }
+});
+
+console.log('CLI installed at:', cliPath);
+```
+
+## Optional Dependencies
+
+### Zod (Recommended)
+
+For structured output validation, install Zod:
+
+```bash
+npm install zod
+```
+
+Then use it with the SDK:
+
+```typescript
+import { z } from 'zod';
+
+const schema = z.object({
+  name: z.string(),
+  version: z.string()
+});
+
+const result = await droid.exec('Get package info as JSON');
+const data = result.parse(schema);
+```
+
+## TypeScript Configuration
+
+The SDK is written in TypeScript and includes type definitions. Ensure your `tsconfig.json` includes:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true
+  }
+}
+```
+
+## Verification
+
+Verify your installation:
+
+```typescript
+import { Droid, MODELS } from '@activade/droid-sdk';
+
+const droid = new Droid({ model: MODELS.CLAUDE_SONNET });
+
+// List available tools
+const tools = await droid.listTools();
+console.log('Available tools:', tools);
+
+// Test execution
+const result = await droid.exec('Say hello');
+console.log(result.finalResponse);
+```
+
+## Environment Variables
+
+The SDK respects these environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| `PATH` | System PATH for finding the CLI |
+| `HOME` | Home directory for CLI installation |
+
+## Troubleshooting
+
+### CLI Not Found
+
+If you get a `CliNotFoundError`:
+
+```typescript
+import { CliNotFoundError, ensureDroidCli } from '@activade/droid-sdk';
+
+try {
+  await droid.exec('Hello');
+} catch (error) {
+  if (error instanceof CliNotFoundError) {
+    console.log('Installing CLI...');
+    await ensureDroidCli();
+  }
+}
+```
+
+### Permission Issues
+
+On Unix systems, ensure the CLI is executable:
+
+```bash
+chmod +x ~/.local/bin/droid
+```
+
+### Timeout Errors
+
+Increase the timeout for long operations:
+
+```typescript
+const droid = new Droid({
+  timeout: 600000 // 10 minutes
+});
+```

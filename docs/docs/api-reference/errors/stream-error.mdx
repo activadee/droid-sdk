@@ -1,0 +1,96 @@
+---
+title: StreamError
+description: Thrown when stream processing fails
+---
+
+# StreamError
+
+Thrown when reading or processing a streaming response fails.
+
+## Import
+
+```typescript
+import { StreamError } from '@activade/droid-sdk';
+```
+
+## Properties
+
+### cause
+
+```typescript
+readonly cause?: Error
+```
+
+The underlying error that caused the stream failure, if available.
+
+## Usage
+
+```typescript
+try {
+  const { events, result } = await thread.runStreamed('Build feature');
+
+  for await (const event of events) {
+    // Process events
+  }
+
+  await result;
+} catch (error) {
+  if (error instanceof StreamError) {
+    console.error('Stream failed:', error.message);
+    if (error.cause) {
+      console.error('Caused by:', error.cause);
+    }
+  }
+}
+```
+
+## Common Causes
+
+1. **Connection interrupted** - Network issues during streaming
+2. **Process terminated** - CLI process was killed
+3. **Invalid stream data** - Malformed JSON in stream
+4. **Resource exhaustion** - Out of memory or file descriptors
+
+## Handling Stream Errors
+
+```typescript
+async function resilientStream(thread: Thread, prompt: string) {
+  const maxRetries = 3;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const { events, result } = await thread.runStreamed(prompt);
+
+      for await (const event of events) {
+        if (event.type === 'turn.failed') {
+          throw new Error(event.error.message);
+        }
+        // Process event
+      }
+
+      return await result;
+    } catch (error) {
+      if (error instanceof StreamError && attempt < maxRetries - 1) {
+        console.log(`Stream error, retrying (${attempt + 1}/${maxRetries})`);
+        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+```
+
+## Inline Error Events
+
+Note that some errors come as events rather than thrown exceptions:
+
+```typescript
+for await (const event of events) {
+  if (event.type === 'turn.failed') {
+    // Error during execution (not a StreamError)
+    console.error('Turn failed:', event.error);
+    break;
+  }
+}
+```
