@@ -242,9 +242,9 @@ jobs:
           FACTORY_API_KEY: ${{ secrets.FACTORY_API_KEY }}
 ```
 
-## API Reference
+## Documentation
 
-See [PLAN.md](./PLAN.md) for the complete API specification.
+Full documentation is available at [activadee.github.io/droid-sdk](https://activadee.github.io/droid-sdk/).
 
 ## License
 

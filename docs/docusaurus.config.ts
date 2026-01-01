@@ -29,6 +29,7 @@ const config: Config = {
 			'classic',
 			{
 				docs: {
+					path: 'content',
 					sidebarPath: './sidebars.ts',
 					editUrl: 'https://github.com/activadee/droid-sdk/tree/main/docs/',
 					routeBasePath: '/',
