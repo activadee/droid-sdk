@@ -33,7 +33,9 @@
     "format": "bunx biome format --write .",
     "clean": "rm -rf dist",
     "prepublishOnly": "bun run clean && bun run lint && bun run test && bun run build",
-    "docs:dev": "bunx mintlify dev --port 3333"
+    "docs:dev": "cd docs-site && npm start",
+    "docs:build": "cd docs-site && npm run build",
+    "docs:deploy": "cd docs-site && npm run deploy"
   },
   "keywords": [
     "factory",

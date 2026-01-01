@@ -58,30 +58,20 @@ run(prompt: string, options?: RunOptions): Promise<TurnResult>
 
 Executes a prompt and waits for the complete response.
 
-<ParamField path="prompt" type="string" required>
-  The natural language prompt to execute.
-</ParamField>
-<ParamField path="options" type="RunOptions" optional>
-  Run-specific configuration.
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `prompt` | `string` | Yes | The natural language prompt |
+| `options` | `RunOptions` | No | Run-specific configuration |
 
-  <Expandable title="RunOptions properties">
-    <ParamField path="outputSchema" type="JsonSchema" optional>
-      JSON Schema for structured output.
-    </ParamField>
-    <ParamField path="promptFile" type="string" optional>
-      Path to a file containing the prompt.
-    </ParamField>
-    <ParamField path="attachments" type="FileAttachment[]" optional>
-      File attachments to include with the prompt.
-    </ParamField>
-    <ParamField path="model" type="string" optional>
-      Override the model for this run.
-    </ParamField>
-    <ParamField path="autonomyLevel" type="AutonomyLevel" optional>
-      Override the autonomy level for this run.
-    </ParamField>
-  </Expandable>
-</ParamField>
+#### RunOptions Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `outputSchema` | `JsonSchema` | JSON Schema for structured output |
+| `promptFile` | `string` | Path to a file containing the prompt |
+| `attachments` | `FileAttachment[]` | File attachments to include |
+| `model` | `string` | Override the model for this run |
+| `autonomyLevel` | `AutonomyLevel` | Override autonomy level |
 
 **Returns:** A promise resolving to the execution result.
 
@@ -103,12 +93,10 @@ runStreamed(prompt: string, options?: RunOptions): Promise<StreamedTurn>
 
 Executes a prompt with real-time streaming of events.
 
-<ParamField path="prompt" type="string" required>
-  The natural language prompt to execute.
-</ParamField>
-<ParamField path="options" type="RunOptions" optional>
-  Run-specific configuration.
-</ParamField>
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `prompt` | `string` | Yes | The natural language prompt |
+| `options` | `RunOptions` | No | Run-specific configuration |
 
 **Returns:** A `StreamedTurn` containing an async event iterator and result promise.
 

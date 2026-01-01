@@ -23,30 +23,20 @@ Creates a new Droid instance with the specified configuration.
 
 ### Parameters
 
-<ParamField path="config" type="DroidConfig" optional>
-  Configuration options for the Droid instance.
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `config` | `DroidConfig` | No | `{}` | Configuration options |
 
-  <Expandable title="DroidConfig properties">
-    <ParamField path="cwd" type="string" optional default="process.cwd()">
-      Working directory for CLI operations.
-    </ParamField>
-    <ParamField path="model" type="ModelId | string" optional>
-      AI model to use for generation.
-    </ParamField>
-    <ParamField path="autonomyLevel" type="AutonomyLevel" optional default="'default'">
-      Level of autonomous decision-making: `'default'`, `'low'`, `'medium'`, or `'high'`.
-    </ParamField>
-    <ParamField path="reasoningEffort" type="ReasoningEffort" optional>
-      Reasoning intensity: `'off'`, `'none'`, `'low'`, `'medium'`, or `'high'`.
-    </ParamField>
-    <ParamField path="droidPath" type="string" optional default="'droid'">
-      Path to the Droid CLI binary.
-    </ParamField>
-    <ParamField path="timeout" type="number" optional default="600000">
-      Maximum execution time in milliseconds.
-    </ParamField>
-  </Expandable>
-</ParamField>
+#### DroidConfig Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `cwd` | `string` | `process.cwd()` | Working directory for CLI operations |
+| `model` | `ModelId \| string` | - | AI model to use for generation |
+| `autonomyLevel` | `AutonomyLevel` | `'default'` | Level: `'default'`, `'low'`, `'medium'`, `'high'` |
+| `reasoningEffort` | `ReasoningEffort` | - | Intensity: `'off'`, `'none'`, `'low'`, `'medium'`, `'high'` |
+| `droidPath` | `string` | `'droid'` | Path to the Droid CLI binary |
+| `timeout` | `number` | `600000` | Maximum execution time in milliseconds |
 
 ### Example
 
@@ -85,9 +75,9 @@ startThread(options?: ThreadOptions): Thread
 
 Creates a new conversation thread for multi-turn interactions.
 
-<ParamField path="options" type="ThreadOptions" optional>
-  Thread-specific configuration that overrides instance defaults.
-</ParamField>
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `options` | `ThreadOptions` | No | Thread-specific configuration |
 
 **Returns:** A new `Thread` instance.
 
@@ -111,12 +101,10 @@ resumeThread(sessionId: string, options?: ThreadOptions): Thread
 
 Resumes a previously created conversation thread.
 
-<ParamField path="sessionId" type="string" required>
-  The unique session identifier from a previous thread.
-</ParamField>
-<ParamField path="options" type="ThreadOptions" optional>
-  Thread-specific configuration overrides.
-</ParamField>
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `sessionId` | `string` | Yes | Session ID from a previous thread |
+| `options` | `ThreadOptions` | No | Thread-specific configuration |
 
 **Returns:** A `Thread` instance connected to the existing session.
 
@@ -133,12 +121,10 @@ exec(prompt: string, options?: ExecOptions): Promise<TurnResult>
 
 Executes a single prompt without maintaining conversation state.
 
-<ParamField path="prompt" type="string" required>
-  The natural language prompt to execute.
-</ParamField>
-<ParamField path="options" type="ExecOptions" optional>
-  Execution options including model, output schema, etc.
-</ParamField>
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `prompt` | `string` | Yes | The natural language prompt |
+| `options` | `ExecOptions` | No | Execution options |
 
 **Returns:** A promise resolving to the execution result.
 
@@ -160,9 +146,9 @@ listTools(model?: string): Promise<string[]>
 
 Lists all available tools for the configured or specified model.
 
-<ParamField path="model" type="string" optional>
-  Model ID to query tools for (defaults to instance model).
-</ParamField>
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `model` | `string` | No | Model ID (defaults to instance model) |
 
 **Returns:** A promise resolving to an array of tool names.
 

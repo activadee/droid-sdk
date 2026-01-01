@@ -76,9 +76,9 @@ parse<T>(schema: { parse: (data: unknown) => T }): T
 
 Parses the final response as JSON and validates against a schema.
 
-<ParamField path="schema" type="{ parse: (data: unknown) => T }" required>
-  A schema with a `parse` method (e.g., Zod schema).
-</ParamField>
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `schema` | `{ parse: (data: unknown) => T }` | Yes | Schema with `parse` method (e.g., Zod) |
 
 **Returns:** The parsed and validated data.
 
