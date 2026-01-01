@@ -1,0 +1,188 @@
+---
+title: CLI Process
+description: Low-level CLI process management functions
+---
+
+# CLI Process
+
+Low-level functions for spawning and managing CLI processes. These are primarily used internally but are exported for advanced use cases.
+
+## Import
+
+```typescript
+import {
+  spawnDroid,
+  spawnDroidStreaming,
+  execDroidJson,
+  listDroidTools,
+  findDroidPath
+} from '@activade/droid-sdk/cli';
+```
+
+## findDroidPath()
+
+Locate the CLI binary:
+
+```typescript
+async function findDroidPath(customPath?: string): Promise<string>
+```
+
+### Example
+
+```typescript
+try {
+  const path = await findDroidPath();
+  console.log('Found CLI at:', path);
+} catch (error) {
+  if (error instanceof CliNotFoundError) {
+    console.log('Searched:', error.searchedPaths);
+  }
+}
+```
+
+## spawnDroid()
+
+Spawn a CLI process and wait for completion:
+
+```typescript
+async function spawnDroid(options: SpawnOptions): Promise<DroidProcessResult>
+```
+
+### SpawnOptions
+
+```typescript
+interface SpawnOptions {
+  prompt: string;
+  cwd?: string;
+  droidPath?: string;
+  model?: string;
+  outputFormat?: OutputFormat;
+  timeout?: number;
+  autonomyLevel?: AutonomyLevel;
+  reasoningEffort?: ReasoningEffort;
+  outputSchema?: JsonSchema;
+  sessionId?: string;
+  enabledTools?: string[];
+  promptFile?: string;
+  attachments?: FileAttachment[];
+}
+```
+
+### DroidProcessResult
+
+```typescript
+interface DroidProcessResult {
+  stdout: string;
+  stderr: string;
+  exitCode: number | null;
+}
+```
+
+### Example
+
+```typescript
+const result = await spawnDroid({
+  prompt: 'Hello',
+  cwd: '/my/project',
+  outputFormat: 'json'
+});
+
+console.log('Output:', result.stdout);
+console.log('Exit code:', result.exitCode);
+```
+
+## spawnDroidStreaming()
+
+Spawn a CLI process with streaming output:
+
+```typescript
+async function spawnDroidStreaming(
+  options: SpawnOptions
+): Promise<StreamingDroidProcess>
+```
+
+### StreamingDroidProcess
+
+```typescript
+interface StreamingDroidProcess {
+  stdout: ReadableStream<Uint8Array>;
+  stderr: ReadableStream<Uint8Array>;
+  exitCode: Promise<number | null>;
+}
+```
+
+### Example
+
+```typescript
+const process = await spawnDroidStreaming({
+  prompt: 'Build feature',
+  outputFormat: 'stream-json'
+});
+
+const reader = process.stdout.getReader();
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  console.log('Chunk:', new TextDecoder().decode(value));
+}
+
+const exitCode = await process.exitCode;
+```
+
+## execDroidJson()
+
+Execute and parse JSON response:
+
+```typescript
+async function execDroidJson(options: SpawnOptions): Promise<JsonResult>
+```
+
+### Example
+
+```typescript
+const result = await execDroidJson({
+  prompt: 'Generate data',
+  cwd: '/project'
+});
+
+console.log('Session:', result.session_id);
+console.log('Response:', result.result);
+```
+
+## listDroidTools()
+
+List available tools:
+
+```typescript
+async function listDroidTools(
+  droidPath?: string,
+  model?: string
+): Promise<string[]>
+```
+
+### Example
+
+```typescript
+const tools = await listDroidTools();
+console.log('Available tools:', tools);
+// ['Read', 'Write', 'Bash', 'Glob', 'Grep', ...]
+```
+
+## Advanced Usage
+
+```typescript
+import {
+  spawnDroidStreaming,
+  parseJsonLines
+} from '@activade/droid-sdk/cli';
+
+// Custom streaming with event parsing
+const process = await spawnDroidStreaming({
+  prompt: 'Complex task',
+  outputFormat: 'stream-json'
+});
+
+for await (const event of parseJsonLines(process.stdout)) {
+  console.log('Event:', event);
+}
+```

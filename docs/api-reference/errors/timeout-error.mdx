@@ -1,0 +1,90 @@
+---
+title: TimeoutError
+description: Thrown when operations exceed the timeout
+---
+
+# TimeoutError
+
+Thrown when an operation takes longer than the configured timeout.
+
+## Import
+
+```typescript
+import { TimeoutError } from '@activade/droid-sdk';
+```
+
+## Properties
+
+### timeoutMs
+
+```typescript
+readonly timeoutMs: number
+```
+
+The timeout value in milliseconds that was exceeded.
+
+## Usage
+
+```typescript
+try {
+  await droid.exec('Complex long-running task');
+} catch (error) {
+  if (error instanceof TimeoutError) {
+    console.error(`Timed out after ${error.timeoutMs}ms`);
+  }
+}
+```
+
+## Preventing Timeouts
+
+### Increase Timeout
+
+```typescript
+const droid = new Droid({
+  timeout: 600000 // 10 minutes
+});
+```
+
+### Per-execution Timeout
+
+```typescript
+// Use a longer timeout for specific operations
+const result = await droid.exec('Build entire project', {
+  timeout: 900000 // 15 minutes
+});
+```
+
+## Handling Timeouts Gracefully
+
+```typescript
+async function executeWithFallback(prompt: string) {
+  const droid = new Droid({ timeout: 60000 });
+
+  try {
+    return await droid.exec(prompt);
+  } catch (error) {
+    if (error instanceof TimeoutError) {
+      console.log('Operation timed out, trying with streaming...');
+
+      // Fall back to streaming for progress visibility
+      const thread = droid.startThread();
+      const { events, result } = await thread.runStreamed(prompt);
+
+      for await (const event of events) {
+        console.log('Progress:', event.type);
+      }
+
+      return await result;
+    }
+    throw error;
+  }
+}
+```
+
+## Default Timeout
+
+The default timeout is 600000ms (10 minutes). For complex operations, consider:
+
+1. Breaking into smaller tasks
+2. Using streaming for progress visibility
+3. Increasing the timeout value

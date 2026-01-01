@@ -1,0 +1,125 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Droid SDK",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#6366F1",
+    "light": "#818CF8",
+    "dark": "#4F46E5",
+    "anchors": {
+      "from": "#6366F1",
+      "to": "#8B5CF6"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "GitHub",
+      "url": "https://github.com/activadee/droid-sdk"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get Started",
+    "url": "/quickstart"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/activadee/droid-sdk"
+    },
+    {
+      "name": "NPM",
+      "icon": "npm",
+      "url": "https://www.npmjs.com/package/@activade/droid-sdk"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "introduction",
+        "quickstart",
+        "installation"
+      ]
+    },
+    {
+      "group": "Core Concepts",
+      "pages": [
+        "concepts/droid",
+        "concepts/threads",
+        "concepts/streaming",
+        "concepts/structured-output"
+      ]
+    },
+    {
+      "group": "Guides",
+      "pages": [
+        "guides/multi-turn",
+        "guides/file-attachments",
+        "guides/error-handling",
+        "guides/ci-cd"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/overview",
+        {
+          "group": "Classes",
+          "pages": [
+            "api-reference/classes/droid",
+            "api-reference/classes/thread",
+            "api-reference/classes/turn-result"
+          ]
+        },
+        {
+          "group": "Errors",
+          "pages": [
+            "api-reference/errors/droid-error",
+            "api-reference/errors/cli-not-found-error",
+            "api-reference/errors/execution-error",
+            "api-reference/errors/parse-error",
+            "api-reference/errors/timeout-error",
+            "api-reference/errors/stream-error"
+          ]
+        },
+        {
+          "group": "Types",
+          "pages": [
+            "api-reference/types/config",
+            "api-reference/types/options",
+            "api-reference/types/events",
+            "api-reference/types/turn-items"
+          ]
+        },
+        {
+          "group": "CLI",
+          "pages": [
+            "api-reference/cli/installer",
+            "api-reference/cli/process"
+          ]
+        },
+        {
+          "group": "Models",
+          "pages": [
+            "api-reference/models/overview",
+            "api-reference/models/model-info"
+          ]
+        }
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/activadee/droid-sdk"
+  }
+}

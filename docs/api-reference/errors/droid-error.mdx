@@ -1,0 +1,76 @@
+---
+title: DroidError
+description: Base error class for all SDK errors
+---
+
+# DroidError
+
+The base class for all Droid SDK errors. Extend this for custom error handling.
+
+## Import
+
+```typescript
+import { DroidError } from '@activade/droid-sdk';
+```
+
+## Usage
+
+```typescript
+try {
+  await droid.exec('Do something');
+} catch (error) {
+  if (error instanceof DroidError) {
+    // Handle any SDK error
+    console.error('SDK error:', error.message);
+  }
+}
+```
+
+## Properties
+
+### message
+
+```typescript
+readonly message: string
+```
+
+Human-readable error description.
+
+### name
+
+```typescript
+readonly name: string
+```
+
+Error class name (`'DroidError'` or subclass name).
+
+## Error Hierarchy
+
+```
+DroidError
+├── CliNotFoundError
+├── ExecutionError
+├── ParseError
+├── TimeoutError
+└── StreamError
+```
+
+## Catching All SDK Errors
+
+```typescript
+import { DroidError } from '@activade/droid-sdk';
+
+async function safeDroidOperation() {
+  try {
+    return await droid.exec('Generate code');
+  } catch (error) {
+    if (error instanceof DroidError) {
+      // Log and handle SDK errors
+      console.error(`Droid SDK error: ${error.name} - ${error.message}`);
+      return null;
+    }
+    // Re-throw unknown errors
+    throw error;
+  }
+}
+```

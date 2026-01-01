@@ -1,0 +1,178 @@
+---
+title: File Attachments
+description: Providing context through file attachments
+---
+
+# File Attachments
+
+File attachments allow you to provide additional context to the AI by including files with your prompts.
+
+## Attachment Types
+
+The SDK supports several attachment types:
+
+| Type | Description | Use Cases |
+|------|-------------|-----------|
+| `image` | Image files | Screenshots, diagrams, UI mockups |
+| `text` | Text files | Source code, configs, logs |
+| `data` | Data files | JSON, CSV, structured data |
+
+## Basic Usage
+
+```typescript
+const result = await thread.run('Describe this image', {
+  attachments: [
+    { path: './screenshot.png', type: 'image' }
+  ]
+});
+```
+
+## Image Attachments
+
+Attach images for visual analysis:
+
+```typescript
+// Single image
+const result = await thread.run('What does this UI show?', {
+  attachments: [
+    { path: './mockup.png', type: 'image' }
+  ]
+});
+
+// Multiple images
+const result = await thread.run('Compare these two designs', {
+  attachments: [
+    { path: './design-v1.png', type: 'image' },
+    { path: './design-v2.png', type: 'image' }
+  ]
+});
+```
+
+## Text Attachments
+
+Attach text files for code review or analysis:
+
+```typescript
+// Code review
+const result = await thread.run('Review this code for security issues', {
+  attachments: [
+    { path: './src/auth.ts', type: 'text', description: 'Authentication module' }
+  ]
+});
+
+// Multiple files with context
+const result = await thread.run('How do these modules interact?', {
+  attachments: [
+    { path: './src/user.ts', type: 'text', description: 'User model' },
+    { path: './src/auth.ts', type: 'text', description: 'Auth service' },
+    { path: './src/api.ts', type: 'text', description: 'API routes' }
+  ]
+});
+```
+
+## Data Attachments
+
+Attach structured data files:
+
+```typescript
+// JSON data
+const result = await thread.run('Analyze this API response', {
+  attachments: [
+    { path: './response.json', type: 'data' }
+  ]
+});
+
+// Configuration analysis
+const result = await thread.run('Review our build configuration', {
+  attachments: [
+    { path: './tsconfig.json', type: 'data' },
+    { path: './package.json', type: 'data' }
+  ]
+});
+```
+
+## File Attachment Interface
+
+```typescript
+interface FileAttachment {
+  /** Path to the file */
+  path: string;
+
+  /** Type of file content */
+  type: 'image' | 'text' | 'data';
+
+  /** Optional description for context */
+  description?: string;
+}
+```
+
+## Practical Examples
+
+### Screenshot Analysis
+
+```typescript
+async function analyzeScreenshot(screenshotPath: string) {
+  const droid = new Droid();
+  const thread = droid.startThread();
+
+  const result = await thread.run(
+    'Analyze this screenshot and identify any UI issues or improvements',
+    {
+      attachments: [
+        { path: screenshotPath, type: 'image' }
+      ]
+    }
+  );
+
+  return result.finalResponse;
+}
+```
+
+### Code Review Workflow
+
+```typescript
+async function reviewChanges(files: string[]) {
+  const droid = new Droid();
+  const thread = droid.startThread();
+
+  const attachments = files.map(file => ({
+    path: file,
+    type: 'text' as const,
+    description: `File: ${file}`
+  }));
+
+  const result = await thread.run(
+    'Review these files for bugs, security issues, and code quality',
+    { attachments }
+  );
+
+  return result.finalResponse;
+}
+```
+
+### Error Log Analysis
+
+```typescript
+async function analyzeErrors(logPath: string) {
+  const droid = new Droid();
+
+  const result = await droid.exec(
+    'Analyze this log file and summarize the errors',
+    {
+      attachments: [
+        { path: logPath, type: 'text', description: 'Application error log' }
+      ]
+    }
+  );
+
+  return result.finalResponse;
+}
+```
+
+## Best Practices
+
+1. **Use descriptions** - Help the AI understand file purpose
+2. **Limit file size** - Large files may be truncated
+3. **Choose correct type** - Affects how content is processed
+4. **Group related files** - Attach files that work together
+5. **Be specific in prompts** - Reference attachments in your prompt
