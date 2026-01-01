@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "TypeScript SDK for Factory Droid CLI",
   "type": "module",
+  "workspaces": ["docs"],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
