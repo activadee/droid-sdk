@@ -3,78 +3,33 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: "Version to release (e.g., 0.1.0 or 0.1.0-beta.1)"
+      bump:
+        description: 'Version bump type'
         required: true
-        type: string
-      prerelease:
-        description: "Mark as pre-release"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      version:
+        description: 'Override version (optional, e.g., 1.2.3)'
         required: false
-        type: boolean
-        default: false
-
-permissions:
-  contents: write
-  id-token: write
+        type: string
 
 jobs:
   release:
-    name: Build, Test & Publish
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
+      id-token: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v4
         with:
-          bun-version: latest
+          fetch-depth: 0
 
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Update version
-        run: bun pm version ${{ github.event.inputs.version }} --no-git-tag-version
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Type check
-        run: bun run typecheck
-
-      - name: Run tests
-        run: bun test
-
-      - name: Build
-        run: bun run build
-
-      - name: Commit, tag and push
-        run: |
-          git add package.json
-          git commit -m "chore(release): v${{ github.event.inputs.version }}"
-          git tag -a "v${{ github.event.inputs.version }}" -m "Release v${{ github.event.inputs.version }}"
-          git push origin main
-          git push origin "v${{ github.event.inputs.version }}"
-
-      # Use native npm for publishing until Bun supports provenance
-      # https://github.com/oven-sh/bun/issues/15601
-      - name: Setup Node.js for npm publish
-        uses: actions/setup-node@v4
+      - uses: activadee/open-workflows/actions/release@main
         with:
-          node-version: "lts/*"
-          registry-url: "https://registry.npmjs.org"
-
-      - name: Publish to npm
-        run: npm publish --provenance --access public
-
-      - name: Create GitHub Release
+          bump: ${{ inputs.bump }}
+          version: ${{ inputs.version }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create "v${{ github.event.inputs.version }}" \
-            --generate-notes \
-            --title "v${{ github.event.inputs.version }}" \
-            ${{ github.event.inputs.prerelease == 'true' && '--prerelease' || '' }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
